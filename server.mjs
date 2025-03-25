@@ -15,7 +15,7 @@ app.use(express.json());
 
 // ✅ CORS Configuration
 app.use(cors({
-  origin: "http://localhost:3000", // Allow frontend
+  origin: "http://localhost:8080", // Allow frontend
   methods: ["GET", "POST", "PUT", "DELETE"],
   credentials: true
 }));
