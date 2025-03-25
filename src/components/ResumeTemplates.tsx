@@ -1,7 +1,7 @@
 import React, { useState } from 'react';
 import { Card, CardContent } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
-import { FileText, Check, Sparkles, Eye } from 'lucide-react';
+import { FileText, Check, Sparkles, Eye, Download } from 'lucide-react';
 import { cn } from "@/lib/utils";
 
 export interface ResumeTemplateProps {
@@ -10,65 +10,82 @@ export interface ResumeTemplateProps {
   description: string;
   image: string;
   isPremium: boolean;
+  colors: string[];
 }
 
 const templates: ResumeTemplateProps[] = [
   {
     id: 'classic',
-    name: 'Classic',
+    name: 'Classic Resume',
     description: 'Traditional layout perfect for most industries',
-    image: '/lovable-uploads/7af0f9e4-7270-48af-9b49-d7862a3700b6.png',
-    isPremium: false
+    image: '/lovable-uploads/12e34a3c-b6c0-4503-9e57-ea585d40f8c4.png',
+    isPremium: false,
+    colors: ['#799f49', '#c46d35', '#3399ff', '#a94056', '#17779e', '#129a82']
   },
   {
     id: 'modern',
-    name: 'Modern',
+    name: 'Modern Resume',
     description: 'Clean design with a touch of color',
-    image: 'https://images.unsplash.com/photo-1460925895917-afdab827c52f?q=80&w=1024&auto=format&fit=crop',
-    isPremium: false
+    image: '/lovable-uploads/12e34a3c-b6c0-4503-9e57-ea585d40f8c4.png',
+    isPremium: false,
+    colors: ['#6E44A1', '#D3BEA1', '#D17537', '#479AE7', '#0F641C', '#B33122']
   },
   {
     id: 'minimal',
-    name: 'Minimal',
+    name: 'Minimal Resume',
     description: 'Simple layout that highlights your experience',
-    image: 'https://images.unsplash.com/photo-1586281380349-632531db7ed4?q=80&w=1024&auto=format&fit=crop',
-    isPremium: false
+    image: '/lovable-uploads/12e34a3c-b6c0-4503-9e57-ea585d40f8c4.png',
+    isPremium: false,
+    colors: ['#629E44', '#B98061', '#3894E8', '#D6CAB0', '#A1354B', '#283967']
   },
   {
     id: 'executive',
-    name: 'Executive',
+    name: 'Executive Resume',
     description: 'Sophisticated design for senior positions',
-    image: 'https://images.unsplash.com/photo-1486312338219-ce68d2c6f44d?q=80&w=1024&auto=format&fit=crop',
-    isPremium: true
+    image: '/lovable-uploads/12e34a3c-b6c0-4503-9e57-ea585d40f8c4.png',
+    isPremium: true,
+    colors: ['#EA8132', '#D3C29E', '#814EB1', '#D76C45', '#D3A648', '#E88481']
   },
   {
     id: 'creative',
-    name: 'Creative',
+    name: 'Creative Resume',
     description: 'Stand out with a unique creative layout',
-    image: 'https://images.unsplash.com/photo-1499750310107-5fef28a66643?q=80&w=1024&auto=format&fit=crop',
-    isPremium: true
+    image: '/lovable-uploads/12e34a3c-b6c0-4503-9e57-ea585d40f8c4.png',
+    isPremium: true,
+    colors: ['#E74189', '#2D7E5D', '#6C2E50', '#1A74BD', '#90A535', '#3E97C9']
   },
   {
     id: 'technical',
-    name: 'Technical',
+    name: 'Technical Resume',
     description: 'Perfect for developers and IT professionals',
-    image: 'https://images.unsplash.com/photo-1461749280684-dccba630e2f6?q=80&w=1024&auto=format&fit=crop',
-    isPremium: true
+    image: '/lovable-uploads/12e34a3c-b6c0-4503-9e57-ea585d40f8c4.png',
+    isPremium: true,
+    colors: ['#629E44', '#B98061', '#3894E8', '#D6CAB0', '#A1354B', '#283967']
   }
 ];
 
 interface ResumeTemplatesProps {
   onSelect: (template: ResumeTemplateProps) => void;
   selectedTemplateId?: string;
+  onColorSelect?: (color: string) => void;
 }
 
-const ResumeTemplates: React.FC<ResumeTemplatesProps> = ({ onSelect, selectedTemplateId }) => {
+const ResumeTemplates: React.FC<ResumeTemplatesProps> = ({ onSelect, selectedTemplateId, onColorSelect }) => {
   const [hoveredTemplate, setHoveredTemplate] = useState<string | null>(null);
   const [previewTemplate, setPreviewTemplate] = useState<string | null>(null);
+  const [selectedColor, setSelectedColor] = useState<string | null>(null);
 
   const handlePreview = (e: React.MouseEvent, templateId: string) => {
     e.stopPropagation();
     setPreviewTemplate(previewTemplate === templateId ? null : templateId);
+  };
+
+  const handleColorSelect = (e: React.MouseEvent, color: string) => {
+    e.stopPropagation();
+    setSelectedColor(color);
+    if (onColorSelect) {
+      onColorSelect(color);
+    }
   };
 
   return (
@@ -120,7 +137,7 @@ const ResumeTemplates: React.FC<ResumeTemplatesProps> = ({ onSelect, selectedTem
                 <h4 className="text-white font-bold text-lg mb-1">{template.name}</h4>
                 <p className="text-white/80 text-center text-sm mb-4">{template.description}</p>
                 
-                <div className="flex gap-2">
+                <div className="flex gap-2 mb-4">
                   <Button 
                     size="sm" 
                     className="bg-primary/90 hover:bg-primary transition-colors"
@@ -144,6 +161,24 @@ const ResumeTemplates: React.FC<ResumeTemplatesProps> = ({ onSelect, selectedTem
                     <Eye className="h-4 w-4 mr-1" />
                     Preview
                   </Button>
+                </div>
+                
+                {/* Color selection */}
+                <div className="flex items-center justify-center gap-2">
+                  {template.colors.map((color, index) => (
+                    <button
+                      key={index}
+                      className={cn(
+                        "w-6 h-6 rounded-full transition-all duration-200",
+                        selectedColor === color && template.id === selectedTemplateId
+                          ? "ring-2 ring-white scale-110"
+                          : "hover:scale-110"
+                      )}
+                      style={{ backgroundColor: color }}
+                      onClick={(e) => handleColorSelect(e, color)}
+                      aria-label={`Select color ${index + 1}`}
+                    />
+                  ))}
                 </div>
               </div>
               
@@ -172,6 +207,22 @@ const ResumeTemplates: React.FC<ResumeTemplatesProps> = ({ onSelect, selectedTem
                   <span className="text-xs bg-green-100 text-green-800 px-2 py-0.5 rounded-full">Free</span>
                 )}
               </div>
+              
+              {/* Color selection bar below the template */}
+              <div className="flex items-center justify-center gap-1 mt-2">
+                {template.colors.slice(0, 6).map((color, index) => (
+                  <button
+                    key={index}
+                    className={cn(
+                      "w-4 h-4 rounded-full transition-all duration-200 hover:scale-110",
+                      selectedColor === color && template.id === selectedTemplateId && "ring-1 ring-gray-400"
+                    )}
+                    style={{ backgroundColor: color }}
+                    onClick={(e) => handleColorSelect(e, color)}
+                    aria-label={`Select color ${index + 1}`}
+                  />
+                ))}
+              </div>
             </CardContent>
           </Card>
         ))}
@@ -189,13 +240,23 @@ const ResumeTemplates: React.FC<ResumeTemplatesProps> = ({ onSelect, selectedTem
           >
             <div className="p-4 border-b flex justify-between items-center">
               <h3 className="font-medium">{templates.find(t => t.id === previewTemplate)?.name} Template Preview</h3>
-              <Button 
-                variant="ghost" 
-                size="sm" 
-                onClick={() => setPreviewTemplate(null)}
-              >
-                Close
-              </Button>
+              <div className="flex gap-2">
+                <Button 
+                  variant="outline" 
+                  size="sm" 
+                  className="flex items-center gap-1"
+                >
+                  <Download className="h-4 w-4" />
+                  Download
+                </Button>
+                <Button 
+                  variant="ghost" 
+                  size="sm" 
+                  onClick={() => setPreviewTemplate(null)}
+                >
+                  Close
+                </Button>
+              </div>
             </div>
             <div className="overflow-auto p-4 max-h-[calc(80vh-60px)]">
               <img 
@@ -205,6 +266,20 @@ const ResumeTemplates: React.FC<ResumeTemplatesProps> = ({ onSelect, selectedTem
               />
             </div>
             <div className="p-4 border-t">
+              <div className="flex flex-wrap justify-center gap-2 mb-4">
+                {templates.find(t => t.id === previewTemplate)?.colors.map((color, index) => (
+                  <button
+                    key={index}
+                    className={cn(
+                      "w-8 h-8 rounded-full transition-all duration-200 hover:scale-110",
+                      selectedColor === color ? "ring-2 ring-gray-400 scale-110" : ""
+                    )}
+                    style={{ backgroundColor: color }}
+                    onClick={(e) => handleColorSelect(e, color)}
+                    aria-label={`Select color ${index + 1}`}
+                  />
+                ))}
+              </div>
               <Button 
                 className="w-full"
                 onClick={() => {

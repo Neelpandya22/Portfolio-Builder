@@ -9,6 +9,7 @@ import Login from "./pages/Login";
 import Register from "./pages/Register";
 import Dashboard from "./pages/Dashboard";
 import PortfolioSetup from "./pages/PortfolioSetup";
+import Projects from "./pages/Projects";
 import NotFound from "./pages/NotFound";
 
 // Create a single instance of QueryClient
@@ -35,8 +36,8 @@ const App = () => {
             {/* Public routes */}
             <Route path="/" element={<Index />} />
             <Route path="/resume" element={<Resume />} />
-            <Route path="/login" element={<Login />} />
-            <Route path="/register" element={<Register />} />
+            <Route path="/login" element={isAuthenticated ? <Navigate to="/dashboard" /> : <Login />} />
+            <Route path="/register" element={isAuthenticated ? <Navigate to="/dashboard" /> : <Register />} />
             
             {/* Protected routes */}
             <Route 
@@ -46,6 +47,10 @@ const App = () => {
             <Route 
               path="/portfolio-setup" 
               element={isAuthenticated ? <PortfolioSetup /> : <Navigate to="/login" />} 
+            />
+            <Route 
+              path="/projects" 
+              element={isAuthenticated ? <Projects /> : <Navigate to="/login" />} 
             />
             
             {/* Catch-all route */}
