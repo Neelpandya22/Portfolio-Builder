@@ -2,7 +2,7 @@ import express from "express";
 import bcrypt from "bcryptjs";
 import jwt from "jsonwebtoken";
 import dotenv from "dotenv";
-import User from "../models/User.mjs"; // ✅ Ensure this model is correctly imported
+import User from "../models/User.mjs"; // ✅ Ensure model is correctly imported
 
 dotenv.config();
 
@@ -23,41 +23,35 @@ const generateToken = (userId) => {
 // ✅ Register Route
 router.post("/register", async (req, res) => {
   try {
-    const { name, username, email, password } = req.body;
+    let { name, username, email, password } = req.body;
 
     // ✅ Validate input
     if (!name || !username || !email || !password) {
       return res.status(400).json({ message: "All fields are required" });
     }
 
-    // ✅ Convert email to lowercase for consistency
-    const normalizedEmail = email.toLowerCase();
+    // ✅ Sanitize inputs
+    email = email.trim().toLowerCase();
+    password = password.trim();
 
     // ✅ Check if username or email already exists
     const existingUser = await User.findOne({
-      $or: [{ username }, { email: normalizedEmail }],
+      $or: [{ username }, { email }],
     });
 
     if (existingUser) {
       return res.status(400).json({
-        message: existingUser.email === normalizedEmail
+        message: existingUser.email === email
           ? "Email already registered"
           : "Username already taken",
       });
     }
 
-    // ✅ Hash the password
-    const salt = await bcrypt.genSalt(10);
-    const hashedPassword = await bcrypt.hash(password, salt);
+    // ✅ Hash the password securely
+    const hashedPassword = await bcrypt.hash(password, 10);
 
     // ✅ Save the new user
-    const newUser = new User({
-      name,
-      username,
-      email: normalizedEmail,
-      password: hashedPassword,
-    });
-
+    const newUser = new User({ name, username, email, password: hashedPassword });
     await newUser.save();
 
     // ✅ Generate Token
@@ -85,21 +79,28 @@ router.post("/login", async (req, res) => {
   try {
     console.log("🟢 Login attempt:", req.body);
 
-    const { email, password } = req.body;
+    let { email, password } = req.body;
 
-    // ✅ Convert email to lowercase for case-insensitive login
-    const normalizedEmail = email.toLowerCase();
-    const user = await User.findOne({ email: normalizedEmail });
+    // ✅ Validate input
+    if (!email || !password) {
+      return res.status(400).json({ message: "Email and password are required" });
+    }
 
+    // ✅ Sanitize inputs
+    email = email.trim().toLowerCase();
+    password = password.trim();
+
+    // ✅ Check if user exists
+    const user = await User.findOne({ email });
     if (!user) {
-      console.log("❌ User not found:", normalizedEmail);
+      console.log("❌ User not found:", email);
       return res.status(401).json({ message: "Invalid email or password" });
     }
 
     // ✅ Compare password
     const isMatch = await bcrypt.compare(password, user.password);
     if (!isMatch) {
-      console.log("❌ Incorrect password for:", normalizedEmail);
+      console.log("❌ Incorrect password for:", email);
       return res.status(401).json({ message: "Invalid email or password" });
     }
 
@@ -107,7 +108,15 @@ router.post("/login", async (req, res) => {
     const token = generateToken(user._id);
 
     console.log("✅ Login successful:", user.email);
-    res.json({ token, user });
+    res.json({
+      token,
+      user: {
+        id: user._id,
+        name: user.name,
+        username: user.username,
+        email: user.email,
+      },
+    });
   } catch (err) {
     console.error("🔴 Login Error:", err);
     res.status(500).json({ message: "Internal Server Error" });

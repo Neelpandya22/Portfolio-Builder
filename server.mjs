@@ -2,8 +2,9 @@ import express from "express";
 import cors from "cors";
 import dotenv from "dotenv";
 import mongoose from "mongoose";
-import authRoutes from "./routes/authRoutes.mjs"; // ✅ Ensure the route exists
+import authRoutes from "./routes/authRoutes.mjs"; // Ensure the route exists
 
+// ✅ Load environment variables early
 dotenv.config();
 
 const app = express();
@@ -11,21 +12,27 @@ const PORT = process.env.PORT || 5000;
 
 // ✅ Middleware
 app.use(express.json());
+
+// ✅ CORS Configuration
 app.use(cors({
-  origin: "http://localhost:3000", // Allow frontend requests (update if deployed)
+  origin: "http://localhost:3000", // Allow frontend
+  methods: ["GET", "POST", "PUT", "DELETE"],
   credentials: true
 }));
 
 // ✅ MongoDB Connection
-if (!process.env.MONGO_URI) {
+const MONGO_URI = process.env.MONGO_URI;
+if (!MONGO_URI) {
   console.error("🔴 Error: MONGO_URI is not defined in .env file!");
   process.exit(1);
 }
 
 mongoose
-  .connect(process.env.MONGO_URI, { serverSelectionTimeoutMS: 5000 })
+  .connect(MONGO_URI, {  serverSelectionTimeoutMS: 5000 })
   .then(() => {
     console.log("🟢 MongoDB Connected");
+
+    // Start server after DB connection is established
     app.listen(PORT, () => console.log(`🚀 Server running on port ${PORT}`));
   })
   .catch((err) => {
@@ -34,7 +41,7 @@ mongoose
   });
 
 // ✅ Register API Routes
-app.use("/api/auth", authRoutes); // 📌 Mount auth routes properly
+app.use("/api/auth", authRoutes); // Mount auth routes properly
 
 // ✅ Default Route
 app.get("/", (req, res) => {
