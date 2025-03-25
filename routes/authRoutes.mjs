@@ -2,7 +2,7 @@ import express from "express";
 import bcrypt from "bcryptjs";
 import jwt from "jsonwebtoken";
 import dotenv from "dotenv";
-import User from "../models/User.mjs"; // ✅ Ensure model is correctly imported
+import User from "../models/User.mjs"; // Ensure model is correctly imported
 
 dotenv.config();
 
@@ -32,11 +32,16 @@ router.post("/register", async (req, res) => {
 
     // ✅ Sanitize inputs
     email = email.trim().toLowerCase();
+    username = username.trim();
     password = password.trim();
+
+    if (password.length < 6) {
+      return res.status(400).json({ message: "Password must be at least 6 characters long." });
+    }
 
     // ✅ Check if username or email already exists
     const existingUser = await User.findOne({
-      $or: [{ username }, { email }],
+      $or: [{ username: username.toLowerCase() }, { email }],
     });
 
     if (existingUser) {
@@ -51,7 +56,13 @@ router.post("/register", async (req, res) => {
     const hashedPassword = await bcrypt.hash(password, 10);
 
     // ✅ Save the new user
-    const newUser = new User({ name, username, email, password: hashedPassword });
+    const newUser = new User({
+      name,
+      username: username.toLowerCase(), // Store username in lowercase
+      email,
+      password: hashedPassword,
+    });
+
     await newUser.save();
 
     // ✅ Generate Token
@@ -77,27 +88,21 @@ router.post("/register", async (req, res) => {
 // ✅ Login Route
 router.post("/login", async (req, res) => {
   try {
-    console.log("🟢 Login attempt:", req.body);
-
     let { email, password } = req.body;
 
-    // ✅ Validate input
-    if (!email || !password) {
-      return res.status(400).json({ message: "Email and password are required" });
-    }
+    console.log("🟢 Login attempt:", email);
 
-    // ✅ Sanitize inputs
     email = email.trim().toLowerCase();
-    password = password.trim();
-
-    // ✅ Check if user exists
     const user = await User.findOne({ email });
+
     if (!user) {
       console.log("❌ User not found:", email);
       return res.status(401).json({ message: "Invalid email or password" });
     }
 
-    // ✅ Compare password
+    console.log("✅ User found:", user.email);
+
+    // ✅ Compare passwords
     const isMatch = await bcrypt.compare(password, user.password);
     if (!isMatch) {
       console.log("❌ Incorrect password for:", email);
@@ -106,8 +111,8 @@ router.post("/login", async (req, res) => {
 
     // ✅ Generate JWT Token
     const token = generateToken(user._id);
-
     console.log("✅ Login successful:", user.email);
+
     res.json({
       token,
       user: {
