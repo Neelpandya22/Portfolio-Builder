@@ -1,4 +1,4 @@
-import React, { useEffect, useState } from 'react';
+import React, { useEffect, useState, useContext } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
@@ -8,28 +8,24 @@ import { CheckCircle, ArrowRight, Palette, MoveHorizontal, Globe, FileText } fro
 import { cn } from "@/lib/utils";
 import { Skeleton } from "@/components/ui/skeleton";
 import { toast } from "sonner";
+import { AuthContext } from '@/App';
 
 const Dashboard = () => {
-  const [user, setUser] = useState<any>(null);
+  const { isAuthenticated, user, setIsAuthenticated, setUser } = useContext(AuthContext);
   const [portfolioProgress, setPortfolioProgress] = useState(0);
   const [loading, setLoading] = useState(true);
   const [animationReady, setAnimationReady] = useState(false);
   const navigate = useNavigate();
+  const userName = user?.name || '';
 
   useEffect(() => {
-    // Check if user is logged in
-    const token = localStorage.getItem('token');
-    const userData = localStorage.getItem('user');
-    
-    if (!token || !userData) {
+    if (!isAuthenticated) {
       navigate('/login', { replace: true });
       return;
     }
     
     // Faster loading with optimized timing
     const timer = setTimeout(() => {
-      setUser(JSON.parse(userData));
-      
       // Calculate portfolio progress
       const steps = localStorage.getItem('portfolio-setup-steps');
       if (steps) {
@@ -47,11 +43,13 @@ const Dashboard = () => {
     }, 200);
     
     return () => clearTimeout(timer);
-  }, [navigate]);
+  }, [navigate, isAuthenticated]);
 
   const handleLogout = () => {
     localStorage.removeItem('token');
     localStorage.removeItem('user');
+    setIsAuthenticated(false);
+    setUser(null);
     toast.success("Successfully logged out");
     navigate('/login', { replace: true });
   };
@@ -95,7 +93,7 @@ const Dashboard = () => {
           "text-center mb-10 transition-all duration-200 ease-out",
           animationReady ? "opacity-100 translate-y-0" : "opacity-0 translate-y-4"
         )}>
-          <h1 className="section-title">Welcome, {user.name}!</h1>
+          <h1 className="section-title">Welcome, {userName}!</h1>
           <p className="section-subtitle mx-auto">
             Manage your portfolio and resume from your personal dashboard.
           </p>

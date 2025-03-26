@@ -1,37 +1,21 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useContext } from 'react';
 import { cn } from "@/lib/utils";
-import { Menu, X, User } from 'lucide-react';
+import { Menu, X, User, Briefcase, ChevronDown } from 'lucide-react';
 import { Link, useLocation } from 'react-router-dom';
+import { AuthContext } from '@/App';
 
 const Navbar = () => {
   const [isScrolled, setIsScrolled] = useState(false);
   const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
-  const [isLoggedIn, setIsLoggedIn] = useState(false);
-  const [userName, setUserName] = useState('');
   const location = useLocation();
-
-  // Check if user is logged in
-  useEffect(() => {
-    const token = localStorage.getItem('token');
-    const userData = localStorage.getItem('user');
-    setIsLoggedIn(!!token);
-
-    if (userData) {
-      try {
-        const user = JSON.parse(userData);
-        setUserName(user?.name || '');
-      } catch (error) {
-        console.error("Error parsing user data:", error);
-        localStorage.removeItem('user'); // Remove corrupted data
-        setUserName('');
-      }
-    }
-  }, [location.pathname]);
+  const { isAuthenticated, user } = useContext(AuthContext);
+  const userName = user?.name || '';
 
   // Handle scroll effect
   useEffect(() => {
     const handleScroll = () => {
-      setIsScrolled(window.scrollY > 10);
+      const scrollPosition = window.scrollY;
+      setIsScrolled(scrollPosition > 10);
     };
 
     window.addEventListener('scroll', handleScroll);
@@ -43,7 +27,7 @@ const Navbar = () => {
     setIsMobileMenuOpen(false);
   }, [location.pathname]);
 
-  // Navigation links
+  // Modified navLinks to remove Portfolio Setup when logged in
   const getNavLinks = () => {
     const baseLinks = [
       { name: 'Home', path: '/', hash: '' },
@@ -52,22 +36,31 @@ const Navbar = () => {
       { name: 'Contact', path: '/', hash: '#contact' },
       { name: 'Resume Builder', path: '/resume', hash: '' },
     ];
-
-    if (!isLoggedIn) {
+    
+    // Add Portfolio Setup only if not logged in
+    if (!isAuthenticated) {
       baseLinks.push({ name: 'Portfolio Setup', path: '/portfolio-setup', hash: '' });
     }
-
+    
     return baseLinks;
   };
 
   // Handle smooth scrolling for hash links
   const handleNavLinkClick = (e: React.MouseEvent<HTMLAnchorElement>, hash: string) => {
+    // Only process hash links on the homepage
     if (location.pathname === '/' && hash) {
       e.preventDefault();
+      
+      // Close mobile menu
       setIsMobileMenuOpen(false);
+      
+      // Find the element to scroll to
       const element = document.querySelector(hash);
       if (element) {
+        // Smooth scroll to the element
         element.scrollIntoView({ behavior: 'smooth' });
+        
+        // Update URL without causing a page reload
         window.history.pushState(null, '', hash);
       }
     }
@@ -79,7 +72,9 @@ const Navbar = () => {
     <header
       className={cn(
         "fixed top-0 left-0 w-full z-50 transition-all duration-300",
-        isScrolled ? "bg-white/90 backdrop-blur-md shadow-sm" : "bg-transparent",
+        isScrolled 
+          ? "bg-white/90 backdrop-blur-md shadow-sm" 
+          : "bg-transparent",
         "animate-fade-in"
       )}
     >
@@ -110,7 +105,7 @@ const Navbar = () => {
             );
           })}
           
-          {isLoggedIn ? (
+          {isAuthenticated ? (
             <div className="flex items-center space-x-4 animate-slide-up" style={{ animationDelay: '0.2s', animationFillMode: 'forwards' }}>
               <span className="text-sm font-medium text-muted-foreground">Welcome, {userName}</span>
               <Link
@@ -123,7 +118,10 @@ const Navbar = () => {
             </div>
           ) : (
             <div className="flex items-center space-x-4">
-              <Link to="/login" className="text-sm font-medium text-primary hover:text-primary/80 transition-colors duration-300">
+              <Link
+                to="/login"
+                className="text-sm font-medium text-primary hover:text-primary/80 transition-colors duration-300"
+              >
                 Login
               </Link>
               <Link
@@ -161,7 +159,9 @@ const Navbar = () => {
                   onClick={(e) => handleNavLinkClick(e, link.hash)}
                   className={cn(
                     "py-2 px-4 rounded-md transition-all duration-300",
-                    isActive ? "bg-primary/10 text-primary" : "text-muted-foreground hover:bg-gray-100"
+                    isActive 
+                      ? "bg-primary/10 text-primary" 
+                      : "text-muted-foreground hover:bg-gray-100"
                   )}
                 >
                   {link.name}
@@ -169,7 +169,7 @@ const Navbar = () => {
               );
             })}
             
-            {isLoggedIn ? (
+            {isAuthenticated ? (
               <div className="space-y-2 pt-3 border-t border-gray-100">
                 <div className="px-4 py-2 text-sm text-muted-foreground">
                   Welcome, {userName}
@@ -184,10 +184,16 @@ const Navbar = () => {
               </div>
             ) : (
               <div className="space-y-2 pt-3 border-t border-gray-100">
-                <Link to="/login" className="py-2 px-4 rounded-md text-primary hover:bg-primary/5 transition-colors duration-300">
+                <Link
+                  to="/login"
+                  className="py-2 px-4 rounded-md text-primary hover:bg-primary/5 transition-colors duration-300"
+                >
                   Login
                 </Link>
-                <Link to="/register" className="py-2 px-4 rounded-md bg-primary text-white hover:bg-primary/90 transition-colors duration-300">
+                <Link
+                  to="/register"
+                  className="py-2 px-4 rounded-md bg-primary text-white hover:bg-primary/90 transition-colors duration-300"
+                >
                   Register
                 </Link>
               </div>

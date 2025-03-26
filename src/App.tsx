@@ -3,7 +3,7 @@ import { Toaster as Sonner } from "@/components/ui/sonner";
 import { TooltipProvider } from "@/components/ui/tooltip";
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import { BrowserRouter, Routes, Route, Navigate } from "react-router-dom";
-import { useState, useEffect } from "react";
+import { useState, useEffect, createContext } from "react";
 import Index from "./pages/Index";
 import Resume from "./pages/Resume";
 import Login from "./pages/Login";
@@ -12,6 +12,14 @@ import Dashboard from "./pages/Dashboard";
 import PortfolioSetup from "./pages/PortfolioSetup";
 import Projects from "./pages/Projects";
 import NotFound from "./pages/NotFound";
+
+// Create a context for authentication state
+export const AuthContext = createContext({
+  isAuthenticated: false,
+  user: null,
+  setIsAuthenticated: (value: boolean) => {},
+  setUser: (user: any) => {},
+});
 
 // Create a single instance of QueryClient
 const queryClient = new QueryClient({
@@ -26,12 +34,20 @@ const queryClient = new QueryClient({
 
 const App = () => {
   const [isAuthenticated, setIsAuthenticated] = useState(false);
+  const [user, setUser] = useState(null);
   const [isLoading, setIsLoading] = useState(true);
 
   useEffect(() => {
     // Check if user is authenticated
     const token = localStorage.getItem('token');
+    const userData = localStorage.getItem('user');
+    
     setIsAuthenticated(!!token);
+    
+    if (userData) {
+      setUser(JSON.parse(userData));
+    }
+    
     setIsLoading(false);
   }, []);
 
@@ -43,38 +59,40 @@ const App = () => {
 
   return (
     <QueryClientProvider client={queryClient}>
-      <TooltipProvider>
-        <Toaster />
-        <Sonner />
-        <div className="page-transition">
-          <BrowserRouter>
-            <Routes>
-              {/* Public routes */}
-              <Route path="/" element={<Index />} />
-              <Route path="/resume" element={<Resume />} />
-              <Route path="/login" element={isAuthenticated ? <Navigate to="/dashboard" replace /> : <Login />} />
-              <Route path="/register" element={isAuthenticated ? <Navigate to="/dashboard" replace /> : <Register />} />
-              
-              {/* Protected routes */}
-              <Route 
-                path="/dashboard" 
-                element={isAuthenticated ? <Dashboard /> : <Navigate to="/login" replace />} 
-              />
-              <Route 
-                path="/portfolio-setup" 
-                element={isAuthenticated ? <PortfolioSetup /> : <Navigate to="/login" replace />} 
-              />
-              <Route 
-                path="/projects" 
-                element={isAuthenticated ? <Projects /> : <Navigate to="/login" replace />} 
-              />
-              
-              {/* Catch-all route */}
-              <Route path="*" element={<NotFound />} />
-            </Routes>
-          </BrowserRouter>
-        </div>
-      </TooltipProvider>
+      <AuthContext.Provider value={{ isAuthenticated, user, setIsAuthenticated, setUser }}>
+        <TooltipProvider>
+          <Toaster />
+          <Sonner />
+          <div className="page-transition">
+            <BrowserRouter>
+              <Routes>
+                {/* Public routes */}
+                <Route path="/" element={<Index />} />
+                <Route path="/resume" element={<Resume />} />
+                <Route path="/login" element={isAuthenticated ? <Navigate to="/dashboard" replace /> : <Login />} />
+                <Route path="/register" element={isAuthenticated ? <Navigate to="/dashboard" replace /> : <Register />} />
+                
+                {/* Protected routes */}
+                <Route 
+                  path="/dashboard" 
+                  element={isAuthenticated ? <Dashboard /> : <Navigate to="/login" replace />} 
+                />
+                <Route 
+                  path="/portfolio-setup" 
+                  element={isAuthenticated ? <PortfolioSetup /> : <Navigate to="/login" replace />} 
+                />
+                <Route 
+                  path="/projects" 
+                  element={isAuthenticated ? <Projects /> : <Navigate to="/login" replace />} 
+                />
+                
+                {/* Catch-all route */}
+                <Route path="*" element={<NotFound />} />
+              </Routes>
+            </BrowserRouter>
+          </div>
+        </TooltipProvider>
+      </AuthContext.Provider>
     </QueryClientProvider>
   );
 };

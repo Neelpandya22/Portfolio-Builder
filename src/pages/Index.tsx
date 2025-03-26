@@ -1,12 +1,15 @@
-import React, { useEffect } from 'react';
+import React, { useEffect, useContext } from 'react';
 import Navbar from '@/components/Navbar';
 import Hero from '@/components/Hero';
 import ProjectGallery from '@/components/ProjectGallery';
 import AboutSection from '@/components/AboutSection';
 import ContactForm from '@/components/ContactForm';
 import Footer from '@/components/Footer';
+import { AuthContext } from '@/App';
 
 const Index = () => {
+  const { isAuthenticated } = useContext(AuthContext);
+  
   // Add intersection observer for animation on scroll
   useEffect(() => {
     const observerOptions = {
@@ -53,13 +56,10 @@ const Index = () => {
     };
   }, []);
 
-  // Use this status to check if user is logged in
-  const isLoggedIn = !!localStorage.getItem('token');
-
   return (
     <div className="min-h-screen bg-background">
       <Navbar />
-      <Hero isLoggedIn={isLoggedIn} />
+      <Hero isLoggedIn={isAuthenticated} />
       <ProjectGallery />
       <AboutSection />
       <ContactForm />

@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useContext } from 'react';
 import { useNavigate, Link } from 'react-router-dom';
 import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
@@ -9,6 +9,8 @@ import { useToast } from "@/hooks/use-toast";
 import Navbar from '@/components/Navbar';
 import Footer from '@/components/Footer';
 import { authService } from '../lib/api.mjs';
+import { AuthContext } from '@/App';
+import { toast } from 'sonner';
 
 const Login = () => {
   const [formData, setFormData] = useState({
@@ -18,7 +20,7 @@ const Login = () => {
   const [error, setError] = useState('');
   const [isLoading, setIsLoading] = useState(false);
   const navigate = useNavigate();
-  const { toast } = useToast();
+  const { setIsAuthenticated, setUser } = useContext(AuthContext);
 
   const handleChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     setFormData({
@@ -42,11 +44,12 @@ const Login = () => {
       localStorage.setItem('token', token);
       localStorage.setItem('user', JSON.stringify(user));
       
+      // Update auth context
+      setIsAuthenticated(true);
+      setUser(user);
+      
       // Show success toast with personalized welcome message
-      toast({
-        title: "Login Successful",
-        description: `Welcome back, ${user.name}!`,
-      });
+      toast.success(`Welcome back, ${user.name}!`);
       
       // Redirect to dashboard
       navigate('/dashboard', { replace: true });
