@@ -15,16 +15,6 @@ const Hero: React.FC<HeroProps> = ({ isLoggedIn: propsIsLoggedIn }) => {
   const userName = user?.name || '';
 
   useEffect(() => {
-    // Check auth status on component mount
-    const checkAuth = () => {
-      const isAuthenticated = authService.isAuthenticated();
-      setIsLoggedIn(isAuthenticated);
-    };
-
-    checkAuth();
-  }, [propsIsLoggedIn]);
-
-  useEffect(() => {
     const handleScroll = () => {
       if (!heroRef.current || !bgPatternRef.current) return;
       const scrollPosition = window.scrollY;

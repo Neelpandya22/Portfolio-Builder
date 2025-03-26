@@ -1,4 +1,4 @@
-import { Toaster } from "@/components/ui/toaster";
+import { Toaster as Toastify } from "@/components/ui/toaster";
 import { Toaster as Sonner } from "@/components/ui/sonner";
 import { TooltipProvider } from "@/components/ui/tooltip";
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
@@ -17,8 +17,8 @@ import NotFound from "./pages/NotFound";
 export const AuthContext = createContext({
   isAuthenticated: false,
   user: null,
-  setIsAuthenticated: (value: boolean) => {},
-  setUser: (user: any) => {},
+  setIsAuthenticated: (_value: boolean) => {}, // Fixed empty function parameter
+  setUser: (_user: any) => {}, // Fixed empty function parameter
 });
 
 // Create a single instance of QueryClient
@@ -39,29 +39,36 @@ const App = () => {
 
   useEffect(() => {
     // Check if user is authenticated
-    const token = localStorage.getItem('token');
-    const userData = localStorage.getItem('user');
-    
+    const token = localStorage.getItem("token");
+    const userData = localStorage.getItem("user");
+
     setIsAuthenticated(!!token);
-    
-    if (userData) {
-      setUser(JSON.parse(userData));
+
+    try {
+      setUser(userData ? JSON.parse(userData) : null);
+    } catch (error) {
+      console.error("Error parsing user data:", error);
+      localStorage.removeItem("user"); // Reset if JSON is invalid
     }
-    
+
     setIsLoading(false);
   }, []);
 
   if (isLoading) {
-    return <div className="min-h-screen flex items-center justify-center">
-      <div className="animate-pulse text-lg text-gray-700">Loading...</div>
-    </div>;
+    return (
+      <div className="min-h-screen flex items-center justify-center">
+        <div className="animate-pulse text-lg text-gray-700">Loading...</div>
+      </div>
+    );
   }
 
   return (
     <QueryClientProvider client={queryClient}>
-      <AuthContext.Provider value={{ isAuthenticated, user, setIsAuthenticated, setUser }}>
+      <AuthContext.Provider
+        value={{ isAuthenticated, user, setIsAuthenticated, setUser }}
+      >
         <TooltipProvider>
-          <Toaster />
+          <Toastify />
           <Sonner />
           <div className="page-transition">
             <BrowserRouter>
@@ -69,23 +76,39 @@ const App = () => {
                 {/* Public routes */}
                 <Route path="/" element={<Index />} />
                 <Route path="/resume" element={<Resume />} />
-                <Route path="/login" element={isAuthenticated ? <Navigate to="/dashboard" replace /> : <Login />} />
-                <Route path="/register" element={isAuthenticated ? <Navigate to="/dashboard" replace /> : <Register />} />
-                
+                <Route
+                  path="/login"
+                  element={
+                    isAuthenticated ? <Navigate to="/dashboard" replace /> : <Login />
+                  }
+                />
+                <Route
+                  path="/register"
+                  element={
+                    isAuthenticated ? <Navigate to="/dashboard" replace /> : <Register />
+                  }
+                />
+
                 {/* Protected routes */}
-                <Route 
-                  path="/dashboard" 
-                  element={isAuthenticated ? <Dashboard /> : <Navigate to="/login" replace />} 
+                <Route
+                  path="/dashboard"
+                  element={
+                    isAuthenticated ? <Dashboard /> : <Navigate to="/login" replace />
+                  }
                 />
-                <Route 
-                  path="/portfolio-setup" 
-                  element={isAuthenticated ? <PortfolioSetup /> : <Navigate to="/login" replace />} 
+                <Route
+                  path="/portfolio-setup"
+                  element={
+                    isAuthenticated ? <PortfolioSetup /> : <Navigate to="/login" replace />
+                  }
                 />
-                <Route 
-                  path="/projects" 
-                  element={isAuthenticated ? <Projects /> : <Navigate to="/login" replace />} 
+                <Route
+                  path="/projects"
+                  element={
+                    isAuthenticated ? <Projects /> : <Navigate to="/login" replace />
+                  }
                 />
-                
+
                 {/* Catch-all route */}
                 <Route path="*" element={<NotFound />} />
               </Routes>
