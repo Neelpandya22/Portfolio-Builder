@@ -2,26 +2,14 @@ import React, { useEffect, useRef } from 'react';
 import { cn } from "@/lib/utils";
 import { ChevronDown, ArrowRight, User, LogIn } from 'lucide-react';
 import { Link } from 'react-router-dom';
-import { authService } from '../lib/api.mjs';
 
 interface HeroProps {
   isLoggedIn?: boolean;
 }
 
-const Hero: React.FC<HeroProps> = ({ isLoggedIn: propsIsLoggedIn }) => {
+const Hero: React.FC<HeroProps> = ({ isLoggedIn = false }) => {
   const heroRef = useRef<HTMLDivElement>(null);
   const bgPatternRef = useRef<HTMLDivElement>(null);
-  const [isLoggedIn, setIsLoggedIn] = React.useState(propsIsLoggedIn || false);
-
-  useEffect(() => {
-    // Check auth status on component mount
-    const checkAuth = () => {
-      const isAuthenticated = authService.isAuthenticated();
-      setIsLoggedIn(isAuthenticated);
-    };
-
-    checkAuth();
-  }, [propsIsLoggedIn]);
 
   useEffect(() => {
     const handleScroll = () => {

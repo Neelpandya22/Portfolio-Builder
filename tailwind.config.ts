@@ -1,6 +1,11 @@
 
 import type { Config } from "tailwindcss";
 
+import tailwindcssAnimate from "tailwindcss-animate";
+import tailwindcssForms from "@tailwindcss/forms";
+import tailwindcssTypography from "@tailwindcss/typography";
+import tailwindcssAspectRatio from "@tailwindcss/aspect-ratio";
+
 export default {
 	darkMode: ["class"],
 	content: [
@@ -127,13 +132,10 @@ export default {
                 'medium': '0 10px 30px -5px rgba(0, 0, 0, 0.1)',
                 'strong': '0 10px 30px -5px rgba(0, 0, 0, 0.2)',
             },
-            backdropBlur: {
-                'xs': '2px',
-            },
-            transitionDuration: {
-                '2000': '2000ms',
-            }
-		}
+			backdropBlur: {
+				'xs': '2px',
+			},
+		},
 	},
-	plugins: [require("tailwindcss-animate")],
+	plugins: [tailwindcssAnimate, tailwindcssForms, tailwindcssTypography, tailwindcssAspectRatio],
 } satisfies Config;

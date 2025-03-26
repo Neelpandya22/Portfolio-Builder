@@ -6,58 +6,6 @@ import { Plus, FolderPlus } from 'lucide-react';
 import { useNavigate } from 'react-router-dom';
 import { authService } from '../lib/api.mjs';
 
-// Sample project data for non-logged in users
-const sampleProjects = [
-  {
-    id: 1,
-    title: "Minimalist Portfolio",
-    description: "A clean, modern portfolio design with a focus on typography and whitespace.",
-    image: "https://images.unsplash.com/photo-1551739440-5dd934d3a94a?q=80&w=1024&auto=format&fit=crop",
-    category: "Web Design",
-    url: "#",
-  },
-  {
-    id: 2,
-    title: "E-commerce Dashboard",
-    description: "An intuitive dashboard for managing online store operations and analytics.",
-    image: "https://images.unsplash.com/photo-1460925895917-afdab827c52f?q=80&w=1024&auto=format&fit=crop",
-    category: "UI/UX",
-    url: "#",
-  },
-  {
-    id: 3,
-    title: "Travel Blog",
-    description: "A visually-rich blog design perfect for showcasing travel photography and stories.",
-    image: "https://images.unsplash.com/photo-1508739773434-c26b3d09e071?q=80&w=1024&auto=format&fit=crop",
-    category: "Web Design",
-    url: "#",
-  },
-  {
-    id: 4,
-    title: "Mobile Fitness App",
-    description: "A health-tracking application with a focus on clean data visualization.",
-    image: "https://images.unsplash.com/photo-1593429736389-d3bbe239b27c?q=80&w=1024&auto=format&fit=crop",
-    category: "Mobile App",
-    url: "#",
-  },
-  {
-    id: 5,
-    title: "Restaurant Website",
-    description: "An elegant website design for a high-end restaurant with online reservation system.",
-    image: "https://images.unsplash.com/photo-1593584785033-9c7604d0863f?q=80&w=1024&auto=format&fit=crop",
-    category: "Web Design",
-    url: "#",
-  },
-  {
-    id: 6,
-    title: "Music Streaming Interface",
-    description: "A modern interface for a music streaming platform with dark mode and personalization features.",
-    image: "https://images.unsplash.com/photo-1470225620780-dba8ba36b745?q=80&w=1024&auto=format&fit=crop",
-    category: "UI/UX",
-    url: "#",
-  }
-];
-
 const ProjectGallery: React.FC = () => {
   const navigate = useNavigate();
   const [selectedCategory, setSelectedCategory] = useState('All');
@@ -83,8 +31,8 @@ const ProjectGallery: React.FC = () => {
         setAllProjects([]); // Empty for logged in users with no projects
       }
     } else {
-      // Not logged in, use sample projects
-      setAllProjects(sampleProjects);
+      // Not logged in, use empty projects array to encourage signup
+      setAllProjects([]);
     }
   }, []);
 
@@ -139,29 +87,30 @@ const ProjectGallery: React.FC = () => {
           )}
         >
           <h2 className="section-title">
-            {isLoggedIn ? 'My Projects' : 'Projects Showcase'}
+            {isLoggedIn ? 'My Projects' : 'Showcase Your Work'}
           </h2>
           <p className="section-subtitle mx-auto">
             {isLoggedIn 
-              ? 'Showcase your portfolio projects and creative work'
-              : 'Explore a collection of beautifully designed portfolio templates for various industries and purposes.'
+              ? 'Manage and showcase your professional portfolio projects'
+              : 'Sign up to create your own professional portfolio and showcase your best work.'
             }
           </p>
           
-          {isLoggedIn && (
-            <div className="mt-6">
-              <Button 
-                onClick={handleAddProject}
-                className="flex items-center gap-2 animate-pulse-slow"
-              >
-                <Plus size={18} />
-                {userProjects.length === 0 ? 'Add Your First Project' : 'Manage Projects'}
-              </Button>
-            </div>
-          )}
+          <div className="mt-6">
+            <Button 
+              onClick={isLoggedIn ? handleAddProject : () => navigate('/register')}
+              className="flex items-center gap-2 animate-pulse-slow bg-black hover:bg-black/90 text-white"
+            >
+              <Plus size={18} />
+              {isLoggedIn 
+                ? (userProjects.length === 0 ? 'Add Your First Project' : 'Manage Projects')
+                : 'Get Started Free'
+              }
+            </Button>
+          </div>
         </div>
 
-        {allProjects.length > 0 && (
+        {allProjects.length > 0 ? (
           <>
             <div className="flex justify-center mb-10 overflow-x-auto pb-2">
               <div className="flex gap-2">
@@ -172,7 +121,7 @@ const ProjectGallery: React.FC = () => {
                     className={cn(
                       "px-4 py-2 text-sm font-medium rounded-full transition-all duration-300",
                       selectedCategory === category
-                        ? "bg-primary text-white shadow-sm"
+                        ? "bg-black text-white shadow-sm"
                         : "bg-white border border-gray-200 text-gray-700 hover:bg-gray-50"
                     )}
                   >
@@ -192,22 +141,25 @@ const ProjectGallery: React.FC = () => {
               ))}
             </div>
           </>
-        )}
-        
-        {isLoggedIn && userProjects.length === 0 && (
+        ) : (
           <div className="bg-gray-50 border border-gray-100 rounded-lg p-10 text-center">
             <FolderPlus className="h-16 w-16 mx-auto text-gray-300 mb-4" />
-            <h3 className="text-xl font-semibold mb-2">No Projects Yet</h3>
+            <h3 className="text-xl font-semibold mb-2">
+              {isLoggedIn ? 'No Projects Yet' : 'Create Your Portfolio'}
+            </h3>
             <p className="text-gray-500 mb-6 max-w-md mx-auto">
-              You haven't added any projects to your portfolio. Add your first project to showcase your work.
+              {isLoggedIn 
+                ? "You haven't added any projects to your portfolio. Add your first project to showcase your work."
+                : "Sign up to create and manage your professional portfolio. Showcase your work to potential clients and employers."
+              }
             </p>
             <Button 
-              onClick={handleAddProject}
+              onClick={isLoggedIn ? handleAddProject : () => navigate('/register')}
               size="lg"
-              className="px-6 py-6 h-auto rounded-full bg-primary/90 hover:bg-primary transition-colors"
+              className="px-6 py-6 h-auto rounded-full bg-black hover:bg-black/90 text-white transition-colors"
             >
               <Plus className="h-5 w-5 mr-2" />
-              Create Your First Project
+              {isLoggedIn ? 'Create Your First Project' : 'Create Free Account'}
             </Button>
           </div>
         )}

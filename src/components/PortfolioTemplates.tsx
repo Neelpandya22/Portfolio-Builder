@@ -66,24 +66,31 @@ const PortfolioTemplates: React.FC<PortfolioTemplatesProps> = ({ onSelect, selec
   const [hoveredTemplate, setHoveredTemplate] = useState<string | null>(null);
 
   return (
-    <div className="space-y-6">
+    <div className="space-y-6 animate-fade-in">
       <div className="flex justify-between items-center">
         <div className="flex items-center gap-2">
-          <Palette className="h-5 w-5 text-primary" />
+          <Palette className="h-5 w-5 text-black" />
           <h3 className="text-lg font-medium">Choose a Template</h3>
         </div>
-        <Button variant="outline" size="sm">View All Templates</Button>
+        <Button variant="outline" size="sm" className="hover:bg-gray-100 transition-colors duration-200">
+          View All Templates
+        </Button>
       </div>
       
       <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-        {templates.map((template) => (
+        {templates.map((template, index) => (
           <Card 
             key={template.id}
             className={cn(
-              "relative overflow-hidden cursor-pointer border-2 transition-all duration-300",
-              template.id === selectedTemplateId ? "border-primary" : "border-transparent",
-              "hover:shadow-md"
+              "relative overflow-hidden cursor-pointer border-2 transition-all duration-200",
+              template.id === selectedTemplateId ? "border-black" : "border-transparent",
+              "hover:shadow-md hover:-translate-y-1",
+              "opacity-0 animate-fade-in"
             )}
+            style={{ 
+              animationDelay: `${index * 70}ms`,
+              animationFillMode: 'forwards' 
+            }}
             onMouseEnter={() => setHoveredTemplate(template.id)}
             onMouseLeave={() => setHoveredTemplate(null)}
             onClick={() => onSelect(template)}
@@ -92,15 +99,17 @@ const PortfolioTemplates: React.FC<PortfolioTemplatesProps> = ({ onSelect, selec
               <img 
                 src={template.image} 
                 alt={template.name} 
-                className="w-full h-full object-cover"
+                className="w-full h-full object-cover transition-transform duration-300 hover:scale-105"
               />
               <div className={cn(
-                "absolute inset-0 bg-black/50 flex flex-col items-center justify-center p-4 transition-opacity duration-300",
-                hoveredTemplate === template.id || template.id === selectedTemplateId ? "opacity-100" : "opacity-0"
+                "absolute inset-0 bg-black/60 flex flex-col items-center justify-center p-4 transition-all duration-200",
+                hoveredTemplate === template.id || template.id === selectedTemplateId 
+                  ? "opacity-100 backdrop-blur-[1px]" 
+                  : "opacity-0"
               )}>
                 <h4 className="text-white font-bold text-lg mb-1">{template.name}</h4>
                 <p className="text-white/80 text-center text-sm mb-3">{template.description}</p>
-                <Button size="sm">
+                <Button size="sm" className="bg-black hover:bg-black/90 text-white transition-all duration-200 hover:-translate-y-0.5">
                   {template.id === selectedTemplateId ? (
                     <>
                       <Check className="h-4 w-4 mr-1" /> Selected
@@ -112,14 +121,14 @@ const PortfolioTemplates: React.FC<PortfolioTemplatesProps> = ({ onSelect, selec
               </div>
               
               {template.isPremium && (
-                <div className="absolute top-2 right-2 bg-yellow-500 text-white text-xs font-bold py-1 px-2 rounded-full flex items-center">
+                <div className="absolute top-2 right-2 bg-yellow-500 text-white text-xs font-bold py-1 px-2 rounded-full flex items-center animate-pulse-slow">
                   <Sparkles className="h-3 w-3 mr-1" />
                   Premium
                 </div>
               )}
               
               {template.id === selectedTemplateId && (
-                <div className="absolute top-2 left-2 bg-primary text-white text-xs font-bold py-1 px-2 rounded-full">
+                <div className="absolute top-2 left-2 bg-black text-white text-xs font-bold py-1 px-2 rounded-full animate-scale-in">
                   <Check className="h-3 w-3" />
                 </div>
               )}

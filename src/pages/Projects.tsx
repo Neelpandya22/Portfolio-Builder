@@ -10,9 +10,10 @@ import { Textarea } from "@/components/ui/textarea";
 import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { useToast } from "@/hooks/use-toast";
+import { Skeleton } from "@/components/ui/skeleton";
 import { Plus, Image, Trash2, Edit, Link as LinkIcon, ExternalLink } from 'lucide-react';
+import { cn } from "@/lib/utils";
 
-// Define project type
 interface Project {
   id: string;
   title: string;
@@ -27,6 +28,7 @@ const Projects = () => {
   const navigate = useNavigate();
   const { toast } = useToast();
   const [isAuthenticated, setIsAuthenticated] = useState(false);
+  const [user, setUser] = useState<any>(null);
   const [projects, setProjects] = useState<Project[]>([]);
   const [newProject, setNewProject] = useState<Omit<Project, 'id' | 'createdAt'>>({
     title: '',
@@ -38,26 +40,35 @@ const Projects = () => {
   const [isAddDialogOpen, setIsAddDialogOpen] = useState(false);
   const [editingProject, setEditingProject] = useState<Project | null>(null);
   const [activeTab, setActiveTab] = useState('all');
+  const [isLoading, setIsLoading] = useState(true);
+  const [animateIn, setAnimateIn] = useState(false);
 
-  // Categories for projects
   const categories = ["Web Design", "Mobile App", "UI/UX", "Graphic Design", "Other"];
 
-  // Check if user is authenticated
   useEffect(() => {
     const token = localStorage.getItem('token');
-    if (!token) {
-      navigate('/login');
-    } else {
-      setIsAuthenticated(true);
-      // Load projects from localStorage
-      const savedProjects = localStorage.getItem('userProjects');
-      if (savedProjects) {
-        setProjects(JSON.parse(savedProjects));
-      }
+    const userData = localStorage.getItem('user');
+    
+    if (!token || !userData) {
+      navigate('/login', { replace: true });
+      return;
     }
+    
+    setUser(JSON.parse(userData));
+    setIsAuthenticated(true);
+    
+    const savedProjects = localStorage.getItem('userProjects');
+    if (savedProjects) {
+      setProjects(JSON.parse(savedProjects));
+    }
+    
+    setIsLoading(false);
+    
+    setTimeout(() => {
+      setAnimateIn(true);
+    }, 100);
   }, [navigate]);
 
-  // Save projects to localStorage when they change
   useEffect(() => {
     if (projects.length > 0) {
       localStorage.setItem('userProjects', JSON.stringify(projects));
@@ -74,7 +85,6 @@ const Projects = () => {
       return;
     }
 
-    // Create new project with unique ID
     const project: Project = {
       ...newProject,
       id: Date.now().toString(),
@@ -124,6 +134,34 @@ const Projects = () => {
     ? projects 
     : projects.filter(project => project.category === activeTab);
 
+  if (isLoading) {
+    return (
+      <div className="min-h-screen bg-background">
+        <Navbar />
+        <section className="py-16 bg-gradient-to-b from-white to-gray-50 animate-fade-in">
+          <div className="portfolio-container">
+            <div className="flex flex-col md:flex-row justify-between items-start md:items-center mb-8 gap-4">
+              <div>
+                <Skeleton className="h-8 w-48 mb-2" />
+                <Skeleton className="h-4 w-64" />
+              </div>
+              <Skeleton className="h-10 w-32" />
+            </div>
+            
+            <Skeleton className="h-12 w-full max-w-md mb-8" />
+            
+            <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
+              {[1, 2, 3, 4, 5, 6].map((i) => (
+                <Skeleton key={i} className="h-64 rounded-xl" />
+              ))}
+            </div>
+          </div>
+        </section>
+        <Footer />
+      </div>
+    );
+  }
+
   if (!isAuthenticated) {
     return null;
   }
@@ -134,17 +172,21 @@ const Projects = () => {
       
       <section className="py-16 bg-gradient-to-b from-white to-gray-50">
         <div className="portfolio-container">
-          <div className="flex flex-col md:flex-row justify-between items-start md:items-center mb-8 gap-4">
+          <div className={cn(
+            "flex flex-col md:flex-row justify-between items-start md:items-center mb-8 gap-4",
+            "transition-all duration-300",
+            animateIn ? "opacity-100 translate-y-0" : "opacity-0 translate-y-4"
+          )}>
             <div>
               <h1 className="text-3xl font-bold mb-2">My Projects</h1>
               <p className="text-muted-foreground">
-                Manage your portfolio projects
+                Welcome, {user?.name}! Manage your portfolio projects here.
               </p>
             </div>
             
             <Dialog open={isAddDialogOpen} onOpenChange={setIsAddDialogOpen}>
               <DialogTrigger asChild>
-                <Button className="flex items-center gap-2">
+                <Button className="flex items-center gap-2 bg-black hover:bg-black/90 text-white">
                   <Plus size={16} />
                   Add New Project
                 </Button>
@@ -164,13 +206,14 @@ const Projects = () => {
                       value={newProject.title}
                       onChange={(e) => setNewProject({...newProject, title: e.target.value})}
                       placeholder="My Awesome Project"
+                      className="transition-all duration-200 focus:ring-2 focus:ring-primary/30"
                     />
                   </div>
                   <div className="grid gap-2">
                     <Label htmlFor="category">Category *</Label>
                     <select 
                       id="category"
-                      className="flex h-10 w-full rounded-md border border-input bg-background px-3 py-2 text-sm ring-offset-background file:border-0 file:bg-transparent file:text-sm file:font-medium placeholder:text-muted-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 disabled:cursor-not-allowed disabled:opacity-50"
+                      className="flex h-10 w-full rounded-md border border-input bg-background px-3 py-2 text-sm ring-offset-background transition-all duration-200 focus:ring-2 focus:ring-primary/30 file:border-0 file:bg-transparent file:text-sm file:font-medium placeholder:text-muted-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 disabled:cursor-not-allowed disabled:opacity-50"
                       value={newProject.category}
                       onChange={(e) => setNewProject({...newProject, category: e.target.value})}
                     >
@@ -187,6 +230,7 @@ const Projects = () => {
                       onChange={(e) => setNewProject({...newProject, description: e.target.value})}
                       placeholder="Describe your project"
                       rows={3}
+                      className="transition-all duration-200 focus:ring-2 focus:ring-primary/30"
                     />
                   </div>
                   <div className="grid gap-2">
@@ -197,6 +241,7 @@ const Projects = () => {
                         value={newProject.image}
                         onChange={(e) => setNewProject({...newProject, image: e.target.value})}
                         placeholder="https://example.com/image.jpg"
+                        className="transition-all duration-200 focus:ring-2 focus:ring-primary/30"
                       />
                       <Button size="icon" variant="outline">
                         <Image size={16} />
@@ -214,6 +259,7 @@ const Projects = () => {
                         value={newProject.url}
                         onChange={(e) => setNewProject({...newProject, url: e.target.value})}
                         placeholder="https://example.com"
+                        className="transition-all duration-200 focus:ring-2 focus:ring-primary/30"
                       />
                       <Button size="icon" variant="outline">
                         <LinkIcon size={16} />
@@ -223,12 +269,11 @@ const Projects = () => {
                 </div>
                 <DialogFooter>
                   <Button variant="outline" onClick={() => setIsAddDialogOpen(false)}>Cancel</Button>
-                  <Button onClick={handleAddProject}>Add Project</Button>
+                  <Button onClick={handleAddProject} className="bg-black hover:bg-black/90 text-white">Add Project</Button>
                 </DialogFooter>
               </DialogContent>
             </Dialog>
             
-            {/* Edit Project Dialog */}
             <Dialog open={!!editingProject} onOpenChange={(open) => !open && setEditingProject(null)}>
               <DialogContent className="sm:max-w-[525px]">
                 <DialogHeader>
@@ -245,13 +290,14 @@ const Projects = () => {
                         id="edit-title" 
                         value={editingProject.title}
                         onChange={(e) => setEditingProject({...editingProject, title: e.target.value})}
+                        className="transition-all duration-200 focus:ring-2 focus:ring-primary/30"
                       />
                     </div>
                     <div className="grid gap-2">
                       <Label htmlFor="edit-category">Category *</Label>
                       <select 
                         id="edit-category"
-                        className="flex h-10 w-full rounded-md border border-input bg-background px-3 py-2 text-sm ring-offset-background file:border-0 file:bg-transparent file:text-sm file:font-medium placeholder:text-muted-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 disabled:cursor-not-allowed disabled:opacity-50"
+                        className="flex h-10 w-full rounded-md border border-input bg-background px-3 py-2 text-sm ring-offset-background transition-all duration-200 focus:ring-2 focus:ring-primary/30 file:border-0 file:bg-transparent file:text-sm file:font-medium placeholder:text-muted-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 disabled:cursor-not-allowed disabled:opacity-50"
                         value={editingProject.category}
                         onChange={(e) => setEditingProject({...editingProject, category: e.target.value})}
                       >
@@ -267,6 +313,7 @@ const Projects = () => {
                         value={editingProject.description}
                         onChange={(e) => setEditingProject({...editingProject, description: e.target.value})}
                         rows={3}
+                        className="transition-all duration-200 focus:ring-2 focus:ring-primary/30"
                       />
                     </div>
                     <div className="grid gap-2">
@@ -275,6 +322,7 @@ const Projects = () => {
                         id="edit-image" 
                         value={editingProject.image}
                         onChange={(e) => setEditingProject({...editingProject, image: e.target.value})}
+                        className="transition-all duration-200 focus:ring-2 focus:ring-primary/30"
                       />
                     </div>
                     <div className="grid gap-2">
@@ -283,19 +331,23 @@ const Projects = () => {
                         id="edit-url" 
                         value={editingProject.url}
                         onChange={(e) => setEditingProject({...editingProject, url: e.target.value})}
+                        className="transition-all duration-200 focus:ring-2 focus:ring-primary/30"
                       />
                     </div>
                   </div>
                 )}
                 <DialogFooter>
                   <Button variant="outline" onClick={() => setEditingProject(null)}>Cancel</Button>
-                  <Button onClick={handleUpdateProject}>Update Project</Button>
+                  <Button onClick={handleUpdateProject} className="bg-black hover:bg-black/90 text-white">Update Project</Button>
                 </DialogFooter>
               </DialogContent>
             </Dialog>
           </div>
           
-          <Tabs value={activeTab} onValueChange={setActiveTab} className="w-full">
+          <Tabs value={activeTab} onValueChange={setActiveTab} className={cn(
+            "w-full transition-all duration-300",
+            animateIn ? "opacity-100 translate-y-0" : "opacity-0 translate-y-4"
+          )} style={{ transitionDelay: "100ms" }}>
             <TabsList className="mb-8">
               <TabsTrigger value="all">All Projects</TabsTrigger>
               {categories.map((category) => (
@@ -305,7 +357,7 @@ const Projects = () => {
             
             <TabsContent value={activeTab} className="mt-0">
               {filteredProjects.length === 0 ? (
-                <Card className="border-dashed">
+                <Card className="border-dashed animate-fade-in">
                   <CardContent className="pt-10 pb-10 text-center">
                     <div className="flex flex-col items-center gap-2">
                       <Image className="h-12 w-12 text-muted-foreground/50" />
@@ -328,8 +380,15 @@ const Projects = () => {
                 </Card>
               ) : (
                 <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-                  {filteredProjects.map((project) => (
-                    <Card key={project.id} className="overflow-hidden hover:shadow-md transition-shadow">
+                  {filteredProjects.map((project, index) => (
+                    <Card 
+                      key={project.id} 
+                      className={cn(
+                        "overflow-hidden transform transition-all duration-300 hover:-translate-y-1 hover:shadow-md",
+                        animateIn ? "opacity-100 translate-y-0" : "opacity-0 translate-y-4"
+                      )}
+                      style={{ transitionDelay: `${150 + index * 50}ms`, transitionTimingFunction: "cubic-bezier(0.16, 1, 0.3, 1)" }}
+                    >
                       <div className="aspect-video relative overflow-hidden bg-gray-100">
                         {project.image ? (
                           <img 

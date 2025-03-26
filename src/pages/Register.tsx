@@ -19,7 +19,6 @@ const Register = () => {
   });
   const [error, setError] = useState('');
   const [isLoading, setIsLoading] = useState(false);
-  const [successMessage, setSuccessMessage] = useState('');
   const navigate = useNavigate();
   const { toast } = useToast();
 
@@ -34,7 +33,6 @@ const Register = () => {
     e.preventDefault();
     setIsLoading(true);
     setError('');
-    setSuccessMessage('');
 
     // Check if passwords match
     if (formData.password !== formData.confirmPassword) {
@@ -44,34 +42,23 @@ const Register = () => {
     }
 
     try {
-      const res = await authService.register({
+      const { token, user } = await authService.register({
         name: formData.name,
         email: formData.email,
         password: formData.password
       });
       
-      // Don't automatically save token to localStorage
-      // Instead show success message and link to login
+      // Store token and user data in localStorage
+      localStorage.setItem('token', token);
+      localStorage.setItem('user', JSON.stringify(user));
       
       toast({
         title: "Registration successful",
-        description: "Your account has been created. Please login now.",
+        description: `Welcome, ${formData.name}! Your account has been created.`,
       });
       
-      setSuccessMessage('Registration successful! You can now log in with your credentials.');
-      
-      // Clear form
-      setFormData({
-        name: '',
-        email: '',
-        password: '',
-        confirmPassword: ''
-      });
-      
-      // Redirect to login after 2 seconds
-      setTimeout(() => {
-        navigate('/login');
-      }, 2000);
+      // Directly navigate to dashboard instead of login
+      navigate('/dashboard');
       
     } catch (err: any) {
       setError(err.response?.data?.message || 'Registration failed. Please try again.');
@@ -86,7 +73,7 @@ const Register = () => {
       <Navbar />
       
       <div className="py-20 portfolio-container flex items-center justify-center">
-        <Card className="w-full max-w-md">
+        <Card className="w-full max-w-md animate-scale-in">
           <CardHeader className="space-y-1">
             <CardTitle className="text-2xl font-bold">Create an account</CardTitle>
             <CardDescription>
@@ -97,12 +84,6 @@ const Register = () => {
             {error && (
               <Alert variant="destructive" className="mb-4">
                 <AlertDescription>{error}</AlertDescription>
-              </Alert>
-            )}
-            
-            {successMessage && (
-              <Alert className="mb-4 bg-green-50 border-green-200">
-                <AlertDescription className="text-green-800">{successMessage}</AlertDescription>
               </Alert>
             )}
             
@@ -118,6 +99,7 @@ const Register = () => {
                     required
                     value={formData.name}
                     onChange={handleChange}
+                    className="transition-all duration-200 focus:ring-2 focus:ring-primary/30"
                   />
                 </div>
                 <div className="space-y-2">
@@ -130,6 +112,7 @@ const Register = () => {
                     required
                     value={formData.email}
                     onChange={handleChange}
+                    className="transition-all duration-200 focus:ring-2 focus:ring-primary/30"
                   />
                 </div>
                 <div className="space-y-2">
@@ -141,6 +124,7 @@ const Register = () => {
                     required
                     value={formData.password}
                     onChange={handleChange}
+                    className="transition-all duration-200 focus:ring-2 focus:ring-primary/30"
                   />
                 </div>
                 <div className="space-y-2">
@@ -152,9 +136,10 @@ const Register = () => {
                     required
                     value={formData.confirmPassword}
                     onChange={handleChange}
+                    className="transition-all duration-200 focus:ring-2 focus:ring-primary/30"
                   />
                 </div>
-                <Button type="submit" className="w-full" disabled={isLoading}>
+                <Button type="submit" className="w-full bg-black hover:bg-black/90 text-white" disabled={isLoading}>
                   {isLoading ? 'Creating account...' : 'Register'}
                 </Button>
               </div>
