@@ -29,35 +29,28 @@ const Login = () => {
     });
   };
 
-  const handleSubmit = async (e: React.FormEvent<HTMLFormElement>) => {
+  const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    setIsLoading(true);
-    setError('');
-    
+  
+    console.log("Submitting form with:", formData); // Debugging output
+  
     try {
-      const { token, user } = await authService.login({
-        email: formData.email,
-        password: formData.password
+      const response = await fetch("http://localhost:5000/api/auth/login", {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify(formData),
       });
-      
-      // Save token and user data
-      localStorage.setItem('token', token);
-      localStorage.setItem('user', JSON.stringify(user));
-      
-      // Update auth context
-      setIsAuthenticated(true);
-      setUser(user);
-      
-      // Show success toast with personalized welcome message
-      toast.success(`Welcome back, ${user.name}!`);
-      
-      // Redirect to dashboard
-      navigate('/dashboard', { replace: true });
+  
+      const data = await response.json();
+      if (!response.ok) {
+        throw new Error(data.message || "Login failed");
+      }
+  
+      console.log("Login successful:", data);
     } catch (error) {
-      console.error('Login error:', error);
-      setError("Invalid email or password. Please try again.");
-    } finally {
-      setIsLoading(false);
+      console.error("Login error:", error);
     }
   };
 

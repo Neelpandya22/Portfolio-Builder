@@ -47,7 +47,11 @@ const Dashboard = () => {
       setAvatarUrl(storedAvatarUrl);
     }
   }, []);
-
+  const handleLogout = () => {
+    localStorage.removeItem("token"); // Remove authentication token
+    localStorage.removeItem("user"); // Remove stored user data
+    window.location.href = "/login"; // Redirect to login page
+  };
   return (
     <div className="min-h-screen bg-background">
       <Navbar />
@@ -79,7 +83,13 @@ const Dashboard = () => {
               </Button>
             </div>
           </div>
-          
+          <Button
+                className="px-6 py-2 rounded-full border border-gray-200 bg-white hover:bg-gray-50 text-gray-800 transform transition-all duration-200 hover:-translate-y-0.5"
+                variant="outline"
+                onClick={handleLogout}
+              >
+                Sign Out
+              </Button>
           {/* Portfolio Completion */}
           <Card>
             <CardHeader className="pb-3">
@@ -358,6 +368,7 @@ const Dashboard = () => {
                   </div>
                 </CardContent>
               </Card>
+              
             </TabsContent>
           </Tabs>
         </div>
