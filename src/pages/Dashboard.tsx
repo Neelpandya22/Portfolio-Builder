@@ -1,5 +1,4 @@
-
-import React, { useContext, useState } from 'react';
+import React, { useContext, useState, useEffect } from 'react';
 import { Link } from 'react-router-dom';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from "@/components/ui/card";
@@ -20,19 +19,34 @@ import {
   BarChart,
   Link2,
   Eye,
-  Share2
+  Share2,
+  User,
+  Camera,
+  Upload
 } from 'lucide-react';
 
 import Navbar from '@/components/Navbar';
 import Footer from '@/components/Footer';
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
 import { AuthContext } from '@/App';
+import ProfileSettings from '@/components/ProfileSettings';
 
 const Dashboard = () => {
   const [progress, setProgress] = useState(65);
   const { user } = useContext(AuthContext);
   const userName = user?.name || 'User';
   const userInitials = userName.split(' ').map(part => part[0]).join('').toUpperCase();
+  const [avatarUrl, setAvatarUrl] = useState("");
+
+  // This would be replaced with actual logic to fetch the user's profile image
+  useEffect(() => {
+    // In a real app, you would fetch the user's profile image from your backend/storage
+    // For now, we'll just use a placeholder or empty string
+    const storedAvatarUrl = localStorage.getItem('avatarUrl');
+    if (storedAvatarUrl) {
+      setAvatarUrl(storedAvatarUrl);
+    }
+  }, []);
 
   return (
     <div className="min-h-screen bg-background">
@@ -44,7 +58,7 @@ const Dashboard = () => {
           <div className="flex flex-col md:flex-row md:items-center justify-between gap-6">
             <div className="flex items-center space-x-4">
               <Avatar className="h-16 w-16 border-2 border-primary/10">
-                <AvatarImage src="" />
+                <AvatarImage src={avatarUrl} />
                 <AvatarFallback className="bg-primary/10 text-primary font-semibold text-xl">
                   {userInitials}
                 </AvatarFallback>
@@ -295,6 +309,8 @@ const Dashboard = () => {
               <div className="flex items-center justify-between">
                 <h2 className="text-xl font-semibold tracking-tight">Portfolio Settings</h2>
               </div>
+              
+              <ProfileSettings userName={userName} userInitials={userInitials} avatarUrl={avatarUrl} setAvatarUrl={setAvatarUrl} />
               
               <Card>
                 <CardHeader>

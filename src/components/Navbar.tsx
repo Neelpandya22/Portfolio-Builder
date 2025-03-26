@@ -3,6 +3,7 @@ import { cn } from "@/lib/utils";
 import { Menu, X, User, Briefcase, ChevronDown } from 'lucide-react';
 import { Link, useLocation } from 'react-router-dom';
 import { AuthContext } from '@/App';
+import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
 
 const Navbar = () => {
   const [isScrolled, setIsScrolled] = useState(false);
@@ -10,6 +11,8 @@ const Navbar = () => {
   const location = useLocation();
   const { isAuthenticated, user } = useContext(AuthContext);
   const userName = user?.name || '';
+  const userInitials = userName.split(' ').map(part => part[0]).join('').toUpperCase();
+  const [avatarUrl, setAvatarUrl] = useState("");
 
   // Handle scroll effect
   useEffect(() => {
@@ -26,6 +29,14 @@ const Navbar = () => {
   useEffect(() => {
     setIsMobileMenuOpen(false);
   }, [location.pathname]);
+
+  // Get avatar URL from localStorage if available
+  useEffect(() => {
+    const storedAvatarUrl = localStorage.getItem('avatarUrl');
+    if (storedAvatarUrl) {
+      setAvatarUrl(storedAvatarUrl);
+    }
+  }, []);
 
   // Modified navLinks to remove Portfolio Setup when logged in
   const getNavLinks = () => {
@@ -107,7 +118,15 @@ const Navbar = () => {
           
           {isAuthenticated ? (
             <div className="flex items-center space-x-4 animate-slide-up" style={{ animationDelay: '0.2s', animationFillMode: 'forwards' }}>
-              <span className="text-sm font-medium text-muted-foreground">Welcome, {userName}</span>
+              <div className="flex items-center gap-2">
+                <Avatar className="h-8 w-8 border border-primary/10">
+                  <AvatarImage src={avatarUrl} />
+                  <AvatarFallback className="bg-primary/10 text-primary font-semibold text-xs">
+                    {userInitials}
+                  </AvatarFallback>
+                </Avatar>
+                <span className="text-sm font-medium text-muted-foreground">{userName}</span>
+              </div>
               <Link
                 to="/dashboard"
                 className="flex items-center text-sm font-medium text-white bg-primary px-4 py-2 rounded-md hover:bg-primary/90 transition-all duration-300 transform hover:-translate-y-1"
@@ -171,8 +190,16 @@ const Navbar = () => {
             
             {isAuthenticated ? (
               <div className="space-y-2 pt-3 border-t border-gray-100">
-                <div className="px-4 py-2 text-sm text-muted-foreground">
-                  Welcome, {userName}
+                <div className="px-4 py-2 flex items-center gap-2">
+                  <Avatar className="h-8 w-8 border border-primary/10">
+                    <AvatarImage src={avatarUrl} />
+                    <AvatarFallback className="bg-primary/10 text-primary font-semibold text-xs">
+                      {userInitials}
+                    </AvatarFallback>
+                  </Avatar>
+                  <span className="text-sm text-muted-foreground">
+                    {userName}
+                  </span>
                 </div>
                 <Link
                   to="/dashboard"
