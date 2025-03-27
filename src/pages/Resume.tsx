@@ -32,6 +32,7 @@ const Resume = () => {
   
   const [activeTab, setActiveTab] = useState('templates');
   const [selectedTemplate, setSelectedTemplate] = useState<ResumeTemplateProps | null>(null);
+  const [selectedColor, setSelectedColor] = useState<string>('#3399ff');
 
   // Check auth status on component mount
   useEffect(() => {
@@ -47,6 +48,22 @@ const Resume = () => {
         console.error('Error parsing saved resume data', e);
       }
     }
+    
+    // Load saved template/color preferences if available
+    const savedTemplate = localStorage.getItem('resumeTemplate');
+    const savedColor = localStorage.getItem('resumeColor');
+    
+    if (savedTemplate) {
+      try {
+        setSelectedTemplate(JSON.parse(savedTemplate));
+      } catch (e) {
+        console.error('Error parsing saved template', e);
+      }
+    }
+    
+    if (savedColor) {
+      setSelectedColor(savedColor);
+    }
   }, []);
 
   // Save resume data to localStorage when it changes
@@ -54,7 +71,16 @@ const Resume = () => {
     if (Object.keys(resumeData.personalInfo).some(key => resumeData.personalInfo[key] !== '')) {
       localStorage.setItem('resumeData', JSON.stringify(resumeData));
     }
-  }, [resumeData]);
+    
+    // Save template and color preferences
+    if (selectedTemplate) {
+      localStorage.setItem('resumeTemplate', JSON.stringify(selectedTemplate));
+    }
+    
+    if (selectedColor) {
+      localStorage.setItem('resumeColor', selectedColor);
+    }
+  }, [resumeData, selectedTemplate, selectedColor]);
 
   const handleTemplateSelect = (template: ResumeTemplateProps) => {
     setSelectedTemplate(template);
@@ -65,12 +91,24 @@ const Resume = () => {
     setActiveTab('editor');
   };
 
-  const handleDownload = () => {
-    // This would be implemented with a PDF generation library in a real app
+  const handleColorSelect = (color: string) => {
+    setSelectedColor(color);
     toast({
-      title: "Resume Downloaded",
-      description: "Your resume has been downloaded as a PDF.",
+      title: "Color Selected",
+      description: "Resume color theme updated.",
     });
+  };
+
+  const handleDownload = () => {
+    // This function is now directly handled by the ResumePreview component
+    const previewComponent = document.getElementById('resume-preview-content');
+    if (!previewComponent) {
+      toast({
+        title: "Download Error",
+        description: "Unable to generate resume. Please try again.",
+        variant: "destructive",
+      });
+    }
   };
 
   const handleLoginPrompt = () => {
@@ -175,6 +213,7 @@ const Resume = () => {
               <ResumeTemplates 
                 onSelect={handleTemplateSelect} 
                 selectedTemplateId={selectedTemplate?.id}
+                onColorSelect={handleColorSelect}
               />
             </TabsContent>
             
@@ -206,7 +245,11 @@ const Resume = () => {
                         Live Preview
                       </h3>
                       <div className="border rounded bg-white p-2 shadow-inner transition-all hover:shadow-md">
-                        <ResumePreview resumeData={resumeData} />
+                        <ResumePreview 
+                          resumeData={resumeData} 
+                          selectedTemplate={selectedTemplate?.id}
+                          selectedColor={selectedColor}
+                        />
                       </div>
                     </div>
                   </div>
@@ -217,7 +260,11 @@ const Resume = () => {
             <TabsContent value="preview" className="py-4">
               <div className="max-w-4xl mx-auto">
                 <div className="bg-white rounded-lg shadow-lg border overflow-hidden transition-all duration-300 hover:shadow-xl">
-                  <ResumePreview resumeData={resumeData} />
+                  <ResumePreview 
+                    resumeData={resumeData} 
+                    selectedTemplate={selectedTemplate?.id}
+                    selectedColor={selectedColor}
+                  />
                 </div>
                 
                 <div className="mt-8 flex justify-center">

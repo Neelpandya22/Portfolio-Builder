@@ -1,10 +1,10 @@
-import React, { useState, useRef, useContext } from 'react';
+import React, { useState, useRef, useContext, useEffect } from 'react';
 import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
-import { User, Camera, Upload, LogOut } from 'lucide-react';
+import { User, Camera, Upload, LogOut, Link as LinkIcon, MapPin, Mail, Globe } from 'lucide-react';
 import { useToast } from "@/components/ui/use-toast";
 import { AuthContext } from '@/App';
 import { useNavigate } from 'react-router-dom';
@@ -27,11 +27,38 @@ const ProfileSettings: React.FC<ProfileSettingsProps> = ({
   const [email, setEmail] = useState('');
   const [location, setLocation] = useState('');
   const [website, setWebsite] = useState('');
+  const [socialLinks, setSocialLinks] = useState({
+    github: '',
+    linkedin: '',
+    twitter: '',
+    instagram: '',
+  });
   const [isUploading, setIsUploading] = useState(false);
   const fileInputRef = useRef<HTMLInputElement>(null);
   const { toast } = useToast();
   const { setIsAuthenticated, setUser } = useContext(AuthContext);
   const navigate = useNavigate();
+
+  // Load saved profile data from localStorage on component mount
+  useEffect(() => {
+    const storedBio = localStorage.getItem('userBio');
+    const storedEmail = localStorage.getItem('userEmail');
+    const storedLocation = localStorage.getItem('userLocation');
+    const storedWebsite = localStorage.getItem('userWebsite');
+    const storedSocialLinks = localStorage.getItem('socialLinks');
+    
+    if (storedBio) setBio(storedBio);
+    if (storedEmail) setEmail(storedEmail);
+    if (storedLocation) setLocation(storedLocation);
+    if (storedWebsite) setWebsite(storedWebsite);
+    if (storedSocialLinks) {
+      try {
+        setSocialLinks(JSON.parse(storedSocialLinks));
+      } catch (e) {
+        console.error('Error parsing stored social links', e);
+      }
+    }
+  }, []);
 
   const handleNameChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     setName(e.target.value);
@@ -51,6 +78,13 @@ const ProfileSettings: React.FC<ProfileSettingsProps> = ({
 
   const handleWebsiteChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     setWebsite(e.target.value);
+  };
+
+  const handleSocialLinkChange = (platform: keyof typeof socialLinks, value: string) => {
+    setSocialLinks(prev => ({
+      ...prev,
+      [platform]: value
+    }));
   };
 
   const handleAvatarClick = () => {
@@ -98,6 +132,7 @@ const ProfileSettings: React.FC<ProfileSettingsProps> = ({
     if (bio) localStorage.setItem('userBio', bio);
     if (location) localStorage.setItem('userLocation', location);
     if (website) localStorage.setItem('userWebsite', website);
+    localStorage.setItem('socialLinks', JSON.stringify(socialLinks));
     
     // Update the user in context if name changed
     if (name !== userName) {
@@ -130,19 +165,6 @@ const ProfileSettings: React.FC<ProfileSettingsProps> = ({
     // Redirect to home page
     navigate('/');
   };
-
-  // Load saved profile data from localStorage
-  React.useEffect(() => {
-    const storedBio = localStorage.getItem('userBio');
-    const storedEmail = localStorage.getItem('userEmail');
-    const storedLocation = localStorage.getItem('userLocation');
-    const storedWebsite = localStorage.getItem('userWebsite');
-    
-    if (storedBio) setBio(storedBio);
-    if (storedEmail) setEmail(storedEmail);
-    if (storedLocation) setLocation(storedLocation);
-    if (storedWebsite) setWebsite(storedWebsite);
-  }, []);
 
   return (
     <Card>
@@ -202,13 +224,17 @@ const ProfileSettings: React.FC<ProfileSettingsProps> = ({
           
           <div className="grid gap-2">
             <Label htmlFor="email">Email Address</Label>
-            <Input 
-              id="email" 
-              type="email"
-              placeholder="your.email@example.com" 
-              value={email} 
-              onChange={handleEmailChange}
-            />
+            <div className="flex items-center relative">
+              <Mail className="absolute left-3 h-4 w-4 text-muted-foreground" />
+              <Input 
+                id="email" 
+                type="email"
+                className="pl-10"
+                placeholder="your.email@example.com" 
+                value={email} 
+                onChange={handleEmailChange}
+              />
+            </div>
           </div>
           
           <div className="grid gap-2">
@@ -225,27 +251,96 @@ const ProfileSettings: React.FC<ProfileSettingsProps> = ({
           <div className="grid sm:grid-cols-2 gap-4">
             <div className="grid gap-2">
               <Label htmlFor="location">Location</Label>
-              <Input 
-                id="location" 
-                placeholder="City, Country" 
-                value={location} 
-                onChange={handleLocationChange}
-              />
+              <div className="flex items-center relative">
+                <MapPin className="absolute left-3 h-4 w-4 text-muted-foreground" />
+                <Input 
+                  id="location" 
+                  className="pl-10"
+                  placeholder="City, Country" 
+                  value={location} 
+                  onChange={handleLocationChange}
+                />
+              </div>
             </div>
             
             <div className="grid gap-2">
               <Label htmlFor="website">Website</Label>
-              <Input 
-                id="website" 
-                placeholder="https://yourwebsite.com" 
-                value={website} 
-                onChange={handleWebsiteChange}
-              />
+              <div className="flex items-center relative">
+                <Globe className="absolute left-3 h-4 w-4 text-muted-foreground" />
+                <Input 
+                  id="website" 
+                  className="pl-10"
+                  placeholder="https://yourwebsite.com" 
+                  value={website} 
+                  onChange={handleWebsiteChange}
+                />
+              </div>
+            </div>
+          </div>
+          
+          <div className="pt-4 border-t border-border">
+            <h3 className="font-medium mb-3">Social Links</h3>
+            <div className="grid sm:grid-cols-2 gap-4">
+              <div className="grid gap-2">
+                <Label htmlFor="github">GitHub</Label>
+                <div className="flex items-center relative">
+                  <LinkIcon className="absolute left-3 h-4 w-4 text-muted-foreground" />
+                  <Input 
+                    id="github" 
+                    className="pl-10"
+                    placeholder="https://github.com/username" 
+                    value={socialLinks.github}
+                    onChange={(e) => handleSocialLinkChange('github', e.target.value)}
+                  />
+                </div>
+              </div>
+              
+              <div className="grid gap-2">
+                <Label htmlFor="linkedin">LinkedIn</Label>
+                <div className="flex items-center relative">
+                  <LinkIcon className="absolute left-3 h-4 w-4 text-muted-foreground" />
+                  <Input 
+                    id="linkedin" 
+                    className="pl-10"
+                    placeholder="https://linkedin.com/in/username" 
+                    value={socialLinks.linkedin}
+                    onChange={(e) => handleSocialLinkChange('linkedin', e.target.value)}
+                  />
+                </div>
+              </div>
+              
+              <div className="grid gap-2">
+                <Label htmlFor="twitter">Twitter</Label>
+                <div className="flex items-center relative">
+                  <LinkIcon className="absolute left-3 h-4 w-4 text-muted-foreground" />
+                  <Input 
+                    id="twitter" 
+                    className="pl-10"
+                    placeholder="https://twitter.com/username" 
+                    value={socialLinks.twitter}
+                    onChange={(e) => handleSocialLinkChange('twitter', e.target.value)}
+                  />
+                </div>
+              </div>
+              
+              <div className="grid gap-2">
+                <Label htmlFor="instagram">Instagram</Label>
+                <div className="flex items-center relative">
+                  <LinkIcon className="absolute left-3 h-4 w-4 text-muted-foreground" />
+                  <Input 
+                    id="instagram" 
+                    className="pl-10"
+                    placeholder="https://instagram.com/username" 
+                    value={socialLinks.instagram}
+                    onChange={(e) => handleSocialLinkChange('instagram', e.target.value)}
+                  />
+                </div>
+              </div>
             </div>
           </div>
         </div>
       </CardContent>
-      <CardFooter className="flex justify-between">
+      <CardFooter className="flex justify-between border-t pt-6">
         <Button onClick={handleSignOut} variant="outline" className="flex items-center gap-2">
           <LogOut size={16} />
           Sign Out

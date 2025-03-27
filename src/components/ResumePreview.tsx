@@ -2,6 +2,7 @@ import React from 'react';
 import { Button } from "@/components/ui/button";
 import { Download, Printer, Mail, Phone, MapPin, Calendar, ExternalLink } from "lucide-react";
 import { cn } from "@/lib/utils";
+import { toast } from "@/components/ui/use-toast";
 
 type ResumeData = {
   personalInfo: {
@@ -48,9 +49,15 @@ type ResumeData = {
 
 interface ResumePreviewProps {
   resumeData: ResumeData;
+  selectedTemplate?: string;
+  selectedColor?: string;
 }
 
-const ResumePreview: React.FC<ResumePreviewProps> = ({ resumeData }) => {
+const ResumePreview: React.FC<ResumePreviewProps> = ({ 
+  resumeData, 
+  selectedTemplate = 'classic', 
+  selectedColor = '#3399ff' 
+}) => {
   const { personalInfo, experience, education, skills, projects } = resumeData;
 
   const handlePrint = () => {
@@ -86,6 +93,7 @@ const ResumePreview: React.FC<ResumePreviewProps> = ({ resumeData }) => {
                 padding-bottom: 4px;
                 margin-top: 24px;
                 margin-bottom: 16px;
+                color: ${selectedColor};
               }
               h3 {
                 font-size: 16px;
@@ -147,6 +155,37 @@ const ResumePreview: React.FC<ResumePreviewProps> = ({ resumeData }) => {
                 white-space: pre-line;
                 font-size: 14px;
               }
+              .skill-ratings {
+                display: flex;
+                align-items: center;
+              }
+              .skill-dot {
+                display: inline-block;
+                width: 8px;
+                height: 8px;
+                border-radius: 50%;
+                margin-right: 3px;
+                background-color: #e5e7eb;
+              }
+              .skill-dot.active {
+                background-color: ${selectedColor};
+              }
+              /* Class-specific styles based on selected template */
+              ${selectedTemplate === 'modern' ? `
+                h1 { color: ${selectedColor}; }
+                .title { font-style: italic; }
+              ` : ''}
+              ${selectedTemplate === 'minimal' ? `
+                h2 { border-bottom: none; }
+                h2:after { 
+                  content: ""; 
+                  display: block;
+                  width: 50px;
+                  height: 3px;
+                  background-color: ${selectedColor};
+                  margin-top: 8px;
+                }
+              ` : ''}
             </style>
           </head>
           <body>
@@ -160,12 +199,30 @@ const ResumePreview: React.FC<ResumePreviewProps> = ({ resumeData }) => {
       setTimeout(() => {
         printWindow.print();
       }, 500);
+    } else {
+      toast({
+        title: "Print Error",
+        description: "There was a problem preparing the resume for printing.",
+        variant: "destructive",
+      });
     }
   };
 
   const handleDownload = () => {
+    toast({
+      title: "Preparing Download",
+      description: "Your resume is being prepared for download.",
+    });
+    
     const content = document.getElementById('resume-preview-content');
-    if (!content) return;
+    if (!content) {
+      toast({
+        title: "Download Error",
+        description: "There was a problem preparing the resume for download.",
+        variant: "destructive",
+      });
+      return;
+    }
     
     const printWindow = window.open('', '_blank');
     
@@ -198,6 +255,7 @@ const ResumePreview: React.FC<ResumePreviewProps> = ({ resumeData }) => {
                 padding-bottom: 4px;
                 margin-top: 24px;
                 margin-bottom: 16px;
+                color: ${selectedColor};
               }
               h3 {
                 font-size: 16px;
@@ -259,6 +317,37 @@ const ResumePreview: React.FC<ResumePreviewProps> = ({ resumeData }) => {
                 white-space: pre-line;
                 font-size: 14px;
               }
+              .skill-ratings {
+                display: flex;
+                align-items: center;
+              }
+              .skill-dot {
+                display: inline-block;
+                width: 8px;
+                height: 8px;
+                border-radius: 50%;
+                margin-right: 3px;
+                background-color: #e5e7eb;
+              }
+              .skill-dot.active {
+                background-color: ${selectedColor};
+              }
+              /* Class-specific styles based on selected template */
+              ${selectedTemplate === 'modern' ? `
+                h1 { color: ${selectedColor}; }
+                .title { font-style: italic; }
+              ` : ''}
+              ${selectedTemplate === 'minimal' ? `
+                h2 { border-bottom: none; }
+                h2:after { 
+                  content: ""; 
+                  display: block;
+                  width: 50px;
+                  height: 3px;
+                  background-color: ${selectedColor};
+                  margin-top: 8px;
+                }
+              ` : ''}
             </style>
           </head>
           <body>
@@ -272,11 +361,18 @@ const ResumePreview: React.FC<ResumePreviewProps> = ({ resumeData }) => {
       
       setTimeout(() => {
         try {
-          printWindow.document.execCommand('SaveAs', true, `${personalInfo.name || 'resume'}.pdf`);
-          printWindow.close();
-        } catch (e) {
-          // If execCommand doesn't work (e.g., in Chrome)
           printWindow.print();
+          toast({
+            title: "Resume Ready",
+            description: "Your resume has been prepared. Use your browser's print dialog to save as PDF.",
+          });
+        } catch (e) {
+          console.error('Print error', e);
+          toast({
+            title: "Download Error",
+            description: "There was a problem downloading your resume. Try again later.",
+            variant: "destructive",
+          });
         }
       }, 500);
     }
@@ -284,10 +380,10 @@ const ResumePreview: React.FC<ResumePreviewProps> = ({ resumeData }) => {
 
   const renderSkillLevel = (level: number) => {
     const maxLevel = 5;
-    const stars = [];
+    const dots = [];
     
     for (let i = 1; i <= maxLevel; i++) {
-      stars.push(
+      dots.push(
         <span 
           key={i}
           className={cn(
@@ -298,7 +394,11 @@ const ResumePreview: React.FC<ResumePreviewProps> = ({ resumeData }) => {
       );
     }
     
-    return stars;
+    return (
+      <div className="skill-ratings">
+        {dots}
+      </div>
+    );
   };
 
   return (
@@ -322,8 +422,14 @@ const ResumePreview: React.FC<ResumePreviewProps> = ({ resumeData }) => {
           <div id="resume-preview-content" className="max-w-[800px] mx-auto">
             {/* Header Section */}
             <div className="header">
-              <h1 className="text-2xl font-bold">{personalInfo.name || 'Your Name'}</h1>
-              {personalInfo.title && <div className="title">{personalInfo.title}</div>}
+              <h1 className="text-2xl font-bold" style={{color: selectedTemplate === 'modern' ? selectedColor : 'inherit'}}>
+                {personalInfo.name || 'Your Name'}
+              </h1>
+              {personalInfo.title && (
+                <div className={cn("title", selectedTemplate === 'modern' && "italic")}>
+                  {personalInfo.title}
+                </div>
+              )}
               
               <div className="contact-info text-sm text-gray-600 flex flex-wrap gap-4">
                 {personalInfo.email && (
@@ -352,7 +458,10 @@ const ResumePreview: React.FC<ResumePreviewProps> = ({ resumeData }) => {
             {/* Summary Section */}
             {personalInfo.summary && (
               <div className="section">
-                <h2 className="text-lg font-semibold border-b pb-1 mb-4">Professional Summary</h2>
+                <h2 className={cn("text-lg font-semibold pb-1 mb-4", selectedTemplate !== 'minimal' && "border-b")} 
+                    style={{color: selectedColor}}>
+                  Professional Summary
+                </h2>
                 <p className="description">{personalInfo.summary}</p>
               </div>
             )}
@@ -360,7 +469,10 @@ const ResumePreview: React.FC<ResumePreviewProps> = ({ resumeData }) => {
             {/* Experience Section */}
             {experience.length > 0 && (
               <div className="section">
-                <h2 className="text-lg font-semibold border-b pb-1 mb-4">Work Experience</h2>
+                <h2 className={cn("text-lg font-semibold pb-1 mb-4", selectedTemplate !== 'minimal' && "border-b")} 
+                    style={{color: selectedColor}}>
+                  Work Experience
+                </h2>
                 
                 {experience.map((exp) => (
                   <div key={exp.id} className="experience-item mb-5">
@@ -385,7 +497,10 @@ const ResumePreview: React.FC<ResumePreviewProps> = ({ resumeData }) => {
             {/* Projects Section */}
             {projects.length > 0 && (
               <div className="section">
-                <h2 className="text-lg font-semibold border-b pb-1 mb-4">Projects</h2>
+                <h2 className={cn("text-lg font-semibold pb-1 mb-4", selectedTemplate !== 'minimal' && "border-b")} 
+                    style={{color: selectedColor}}>
+                  Projects
+                </h2>
                 
                 {projects.map((project) => (
                   <div key={project.id} className="experience-item mb-5">
@@ -419,7 +534,10 @@ const ResumePreview: React.FC<ResumePreviewProps> = ({ resumeData }) => {
             {/* Education Section */}
             {education.length > 0 && (
               <div className="section">
-                <h2 className="text-lg font-semibold border-b pb-1 mb-4">Education</h2>
+                <h2 className={cn("text-lg font-semibold pb-1 mb-4", selectedTemplate !== 'minimal' && "border-b")} 
+                    style={{color: selectedColor}}>
+                  Education
+                </h2>
                 
                 {education.map((edu) => (
                   <div key={edu.id} className="education-item mb-5">
@@ -444,7 +562,10 @@ const ResumePreview: React.FC<ResumePreviewProps> = ({ resumeData }) => {
             {/* Skills Section */}
             {skills.length > 0 && (
               <div className="section">
-                <h2 className="text-lg font-semibold border-b pb-1 mb-4">Skills</h2>
+                <h2 className={cn("text-lg font-semibold pb-1 mb-4", selectedTemplate !== 'minimal' && "border-b")} 
+                    style={{color: selectedColor}}>
+                  Skills
+                </h2>
                 
                 <div className="grid gap-3 grid-cols-1 sm:grid-cols-2">
                   {skills.map((skill) => (

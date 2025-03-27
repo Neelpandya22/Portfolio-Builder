@@ -1,10 +1,11 @@
 import React, { useContext, useState, useEffect } from 'react';
-import { Link } from 'react-router-dom';
+import { Link, useNavigate } from 'react-router-dom';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Separator } from "@/components/ui/separator";
 import { Progress } from "@/components/ui/progress";
+import { useToast } from "@/components/ui/use-toast";
 import { 
   Settings, 
   Briefcase, 
@@ -22,7 +23,8 @@ import {
   Share2,
   User,
   Camera,
-  Upload
+  Upload,
+  LogOut
 } from 'lucide-react';
 
 import Navbar from '@/components/Navbar';
@@ -33,25 +35,77 @@ import ProfileSettings from '@/components/ProfileSettings';
 
 const Dashboard = () => {
   const [progress, setProgress] = useState(65);
-  const { user } = useContext(AuthContext);
+  const [activeTab, setActiveTab] = useState('projects');
+  const { toast } = useToast();
+  const navigate = useNavigate();
+  const { user, setIsAuthenticated, setUser } = useContext(AuthContext);
   const userName = user?.name || 'User';
   const userInitials = userName.split(' ').map(part => part[0]).join('').toUpperCase();
   const [avatarUrl, setAvatarUrl] = useState("");
 
-  // This would be replaced with actual logic to fetch the user's profile image
+  // Load avatar and calculate progress on mount
   useEffect(() => {
-    // In a real app, you would fetch the user's profile image from your backend/storage
-    // For now, we'll just use a placeholder or empty string
+    // Load avatar
     const storedAvatarUrl = localStorage.getItem('avatarUrl');
     if (storedAvatarUrl) {
       setAvatarUrl(storedAvatarUrl);
     }
+    
+    // Calculate profile completion percentage
+    calculateProfileCompletion();
   }, []);
-  const handleLogout = () => {
-    localStorage.removeItem("token"); // Remove authentication token
-    localStorage.removeItem("user"); // Remove stored user data
-    window.location.href = "/login"; // Redirect to login page
+  
+  // Calculate profile completion percentage based on data in localStorage
+  const calculateProfileCompletion = () => {
+    const profileItems = [
+      localStorage.getItem('userName'),
+      localStorage.getItem('userEmail'),
+      localStorage.getItem('userBio'),
+      localStorage.getItem('userLocation'),
+      localStorage.getItem('userWebsite'),
+      localStorage.getItem('avatarUrl'),
+      localStorage.getItem('socialLinks'),
+      localStorage.getItem('resumeData'),
+    ];
+    
+    const completedItems = profileItems.filter(item => item).length;
+    const newProgress = Math.min(100, Math.round((completedItems / profileItems.length) * 100));
+    setProgress(newProgress);
   };
+  
+  const handleSignOut = () => {
+    // Clear auth data
+    localStorage.removeItem('token');
+    localStorage.removeItem('user');
+    
+    // Update auth context
+    setIsAuthenticated(false);
+    setUser(null);
+    
+    toast({
+      title: "Signed out",
+      description: "You have been signed out successfully.",
+    });
+    
+    // Redirect to home page
+    navigate('/');
+  };
+  
+  const handlePreviewPortfolio = () => {
+    // In a real app, this would navigate to the public portfolio view
+    toast({
+      title: "Portfolio Preview",
+      description: "This feature will be available soon.",
+    });
+  };
+  
+  const handlePublishPortfolio = () => {
+    toast({
+      title: "Portfolio Published",
+      description: "Your portfolio is now live and accessible to the public.",
+    });
+  };
+
   return (
     <div className="min-h-screen bg-background">
       <Navbar />
@@ -73,23 +127,17 @@ const Dashboard = () => {
               </div>
             </div>
             <div className="flex items-center space-x-3">
-              <Button variant="outline" size="sm">
-                <Settings className="mr-2 h-4 w-4" />
-                Settings
+              <Button variant="outline" size="sm" onClick={handleSignOut} className="flex items-center gap-1">
+                <LogOut className="h-4 w-4" />
+                Sign Out
               </Button>
-              <Button size="sm">
-                <Eye className="mr-2 h-4 w-4" />
+              <Button size="sm" onClick={handlePreviewPortfolio} className="flex items-center gap-1">
+                <Eye className="h-4 w-4" />
                 Preview Portfolio
               </Button>
             </div>
           </div>
-          <Button
-                className="px-6 py-2 rounded-full border border-gray-200 bg-white hover:bg-gray-50 text-gray-800 transform transition-all duration-200 hover:-translate-y-0.5"
-                variant="outline"
-                onClick={handleLogout}
-              >
-                Sign Out
-              </Button>
+          
           {/* Portfolio Completion */}
           <Card>
             <CardHeader className="pb-3">
@@ -107,7 +155,10 @@ const Dashboard = () => {
                 </div>
                 
                 <div className="grid gap-3 md:grid-cols-3">
-                  <div className="flex items-start space-x-4 rounded-lg border p-4">
+                  <div 
+                    className="flex items-start space-x-4 rounded-lg border p-4 cursor-pointer hover:bg-muted/50 transition-colors"
+                    onClick={() => navigate('/projects')}
+                  >
                     <Briefcase className="mt-1 h-5 w-5 text-primary" />
                     <div>
                       <p className="text-sm font-medium">Add Projects</p>
@@ -115,7 +166,10 @@ const Dashboard = () => {
                     </div>
                   </div>
                   
-                  <div className="flex items-start space-x-4 rounded-lg border p-4 bg-primary/5">
+                  <div 
+                    className="flex items-start space-x-4 rounded-lg border p-4 bg-primary/5 cursor-pointer hover:bg-primary/10 transition-colors"
+                    onClick={() => navigate('/resume')}
+                  >
                     <FileText className="mt-1 h-5 w-5 text-primary" />
                     <div>
                       <p className="text-sm font-medium">Update Resume</p>
@@ -123,7 +177,10 @@ const Dashboard = () => {
                     </div>
                   </div>
                   
-                  <div className="flex items-start space-x-4 rounded-lg border p-4">
+                  <div 
+                    className="flex items-start space-x-4 rounded-lg border p-4 cursor-pointer hover:bg-muted/50 transition-colors"
+                    onClick={() => setActiveTab('settings')}
+                  >
                     <ImageIcon className="mt-1 h-5 w-5 text-primary" />
                     <div>
                       <p className="text-sm font-medium">Upload Photos</p>
@@ -134,15 +191,20 @@ const Dashboard = () => {
               </div>
             </CardContent>
             <CardFooter>
-              <Button variant="outline" size="sm" className="ml-auto">
-                Continue Setup
+              <Button 
+                variant="outline" 
+                size="sm" 
+                className="ml-auto"
+                onClick={handlePublishPortfolio}
+              >
+                Publish Portfolio
                 <ArrowRight className="ml-2 h-4 w-4" />
               </Button>
             </CardFooter>
           </Card>
           
           {/* Dashboard Tabs */}
-          <Tabs defaultValue="projects" className="mt-6">
+          <Tabs defaultValue={activeTab} value={activeTab} onValueChange={setActiveTab} className="mt-6">
             <TabsList className="grid w-full grid-cols-4 mb-6">
               <TabsTrigger value="projects">Projects</TabsTrigger>
               <TabsTrigger value="resume">Resume</TabsTrigger>
@@ -216,7 +278,9 @@ const Dashboard = () => {
                         <h3 className="text-sm font-medium">Work Experience</h3>
                         <p className="text-sm text-muted-foreground">Add your work history</p>
                       </div>
-                      <Button variant="ghost" size="sm" className="ml-auto">Add</Button>
+                      <Link to="/resume?tab=editor" className="ml-auto">
+                        <Button variant="ghost" size="sm">Add</Button>
+                      </Link>
                     </div>
                     
                     <Separator />
@@ -229,7 +293,9 @@ const Dashboard = () => {
                         <h3 className="text-sm font-medium">Skills</h3>
                         <p className="text-sm text-muted-foreground">Highlight your key skills</p>
                       </div>
-                      <Button variant="ghost" size="sm" className="ml-auto">Add</Button>
+                      <Link to="/resume?tab=editor" className="ml-auto">
+                        <Button variant="ghost" size="sm">Add</Button>
+                      </Link>
                     </div>
                     
                     <Separator />
@@ -242,7 +308,9 @@ const Dashboard = () => {
                         <h3 className="text-sm font-medium">Education</h3>
                         <p className="text-sm text-muted-foreground">Add your educational background</p>
                       </div>
-                      <Button variant="ghost" size="sm" className="ml-auto">Add</Button>
+                      <Link to="/resume?tab=editor" className="ml-auto">
+                        <Button variant="ghost" size="sm">Add</Button>
+                      </Link>
                     </div>
                   </div>
                 </CardContent>
@@ -260,8 +328,8 @@ const Dashboard = () => {
             <TabsContent value="analytics" className="space-y-6">
               <div className="flex items-center justify-between">
                 <h2 className="text-xl font-semibold tracking-tight">Portfolio Analytics</h2>
-                <Button variant="outline" size="sm">
-                  <Share2 className="mr-2 h-4 w-4" />
+                <Button variant="outline" size="sm" onClick={handlePublishPortfolio} className="flex items-center gap-1">
+                  <Share2 className="h-4 w-4" />
                   Share Portfolio
                 </Button>
               </div>
@@ -337,7 +405,17 @@ const Dashboard = () => {
                         <h3 className="text-sm font-medium">Custom Domain</h3>
                         <p className="text-sm text-muted-foreground">Connect a custom domain to your portfolio</p>
                       </div>
-                      <Button variant="outline" size="sm" className="ml-auto">Connect</Button>
+                      <Button 
+                        variant="outline" 
+                        size="sm" 
+                        className="ml-auto"
+                        onClick={() => toast({
+                          title: "Domain Settings",
+                          description: "Custom domain feature will be available soon."
+                        })}
+                      >
+                        Connect
+                      </Button>
                     </div>
                     
                     <Separator />
@@ -350,7 +428,14 @@ const Dashboard = () => {
                         <h3 className="text-sm font-medium">Social Links</h3>
                         <p className="text-sm text-muted-foreground">Add links to your social profiles</p>
                       </div>
-                      <Button variant="outline" size="sm" className="ml-auto">Manage</Button>
+                      <Button 
+                        variant="outline" 
+                        size="sm" 
+                        className="ml-auto" 
+                        onClick={() => setActiveTab('settings')}
+                      >
+                        Manage
+                      </Button>
                     </div>
                     
                     <Separator />
@@ -363,12 +448,18 @@ const Dashboard = () => {
                         <h3 className="text-sm font-medium">Account Settings</h3>
                         <p className="text-sm text-muted-foreground">Update your account information</p>
                       </div>
-                      <Button variant="outline" size="sm" className="ml-auto">Edit</Button>
+                      <Button 
+                        variant="outline" 
+                        size="sm" 
+                        className="ml-auto"
+                        onClick={() => setActiveTab('settings')}
+                      >
+                        Edit
+                      </Button>
                     </div>
                   </div>
                 </CardContent>
               </Card>
-              
             </TabsContent>
           </Tabs>
         </div>
