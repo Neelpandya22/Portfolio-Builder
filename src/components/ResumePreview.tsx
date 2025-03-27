@@ -51,12 +51,14 @@ interface ResumePreviewProps {
   resumeData: ResumeData;
   selectedTemplate?: string;
   selectedColor?: string;
+  downloadable?: boolean;
 }
 
 const ResumePreview: React.FC<ResumePreviewProps> = ({ 
   resumeData, 
   selectedTemplate = 'classic', 
-  selectedColor = '#3399ff' 
+  selectedColor = '#3399ff',
+  downloadable = false
 }) => {
   const { personalInfo, experience, education, skills, projects } = resumeData;
 

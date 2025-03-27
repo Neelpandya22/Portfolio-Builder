@@ -13,12 +13,19 @@ export interface ResumeTemplateProps {
   colors: string[];
 }
 
+interface ResumeTemplatesProps {
+  onSelect: (template: ResumeTemplateProps) => void;
+  selectedTemplateId?: string;
+  onColorSelect?: (color: string) => void;
+  selectedColor?: string;
+}
+
 const templates: ResumeTemplateProps[] = [
   {
     id: 'classic',
     name: 'Classic Resume',
     description: 'Traditional layout perfect for most industries',
-    image: '/lovable-uploads/12e34a3c-b6c0-4503-9e57-ea585d40f8c4.png',
+    image: 'https://images.unsplash.com/photo-1586281380117-5a60ae2050cc?q=80&w=1024&auto=format&fit=crop',
     isPremium: false,
     colors: ['#799f49', '#c46d35', '#3399ff', '#a94056', '#17779e', '#129a82']
   },
@@ -26,7 +33,7 @@ const templates: ResumeTemplateProps[] = [
     id: 'modern',
     name: 'Modern Resume',
     description: 'Clean design with a touch of color',
-    image: '/lovable-uploads/12e34a3c-b6c0-4503-9e57-ea585d40f8c4.png',
+    image: 'https://images.unsplash.com/photo-1517842645767-c639042777db?q=80&w=1024&auto=format&fit=crop',
     isPremium: false,
     colors: ['#6E44A1', '#D3BEA1', '#D17537', '#479AE7', '#0F641C', '#B33122']
   },
@@ -34,7 +41,7 @@ const templates: ResumeTemplateProps[] = [
     id: 'minimal',
     name: 'Minimal Resume',
     description: 'Simple layout that highlights your experience',
-    image: '/lovable-uploads/12e34a3c-b6c0-4503-9e57-ea585d40f8c4.png',
+    image: 'https://images.unsplash.com/photo-1580978543069-8cb952f068da?q=80&w=1024&auto=format&fit=crop',
     isPremium: false,
     colors: ['#629E44', '#B98061', '#3894E8', '#D6CAB0', '#A1354B', '#283967']
   },
@@ -42,7 +49,7 @@ const templates: ResumeTemplateProps[] = [
     id: 'executive',
     name: 'Executive Resume',
     description: 'Sophisticated design for senior positions',
-    image: '/lovable-uploads/12e34a3c-b6c0-4503-9e57-ea585d40f8c4.png',
+    image: 'https://images.unsplash.com/photo-1545665277-5937489579f2?q=80&w=1024&auto=format&fit=crop',
     isPremium: true,
     colors: ['#EA8132', '#D3C29E', '#814EB1', '#D76C45', '#D3A648', '#E88481']
   },
@@ -50,7 +57,7 @@ const templates: ResumeTemplateProps[] = [
     id: 'creative',
     name: 'Creative Resume',
     description: 'Stand out with a unique creative layout',
-    image: '/lovable-uploads/12e34a3c-b6c0-4503-9e57-ea585d40f8c4.png',
+    image: 'https://images.unsplash.com/photo-1571867424488-4565932edb41?q=80&w=1024&auto=format&fit=crop',
     isPremium: true,
     colors: ['#E74189', '#2D7E5D', '#6C2E50', '#1A74BD', '#90A535', '#3E97C9']
   },
@@ -58,22 +65,16 @@ const templates: ResumeTemplateProps[] = [
     id: 'technical',
     name: 'Technical Resume',
     description: 'Perfect for developers and IT professionals',
-    image: '/lovable-uploads/12e34a3c-b6c0-4503-9e57-ea585d40f8c4.png',
+    image: 'https://images.unsplash.com/photo-1516383740770-fbcc5ccbece0?q=80&w=1024&auto=format&fit=crop',
     isPremium: true,
     colors: ['#629E44', '#B98061', '#3894E8', '#D6CAB0', '#A1354B', '#283967']
   }
 ];
 
-interface ResumeTemplatesProps {
-  onSelect: (template: ResumeTemplateProps) => void;
-  selectedTemplateId?: string;
-  onColorSelect?: (color: string) => void;
-}
-
-const ResumeTemplates: React.FC<ResumeTemplatesProps> = ({ onSelect, selectedTemplateId, onColorSelect }) => {
+const ResumeTemplates: React.FC<ResumeTemplatesProps> = ({ onSelect, selectedTemplateId, onColorSelect, selectedColor }) => {
   const [hoveredTemplate, setHoveredTemplate] = useState<string | null>(null);
   const [previewTemplate, setPreviewTemplate] = useState<string | null>(null);
-  const [selectedColor, setSelectedColor] = useState<string | null>(null);
+  const [localSelectedColor, setLocalSelectedColor] = useState<string | null>(null);
 
   const handlePreview = (e: React.MouseEvent, templateId: string) => {
     e.stopPropagation();
@@ -82,11 +83,14 @@ const ResumeTemplates: React.FC<ResumeTemplatesProps> = ({ onSelect, selectedTem
 
   const handleColorSelect = (e: React.MouseEvent, color: string) => {
     e.stopPropagation();
-    setSelectedColor(color);
+    setLocalSelectedColor(color);
     if (onColorSelect) {
       onColorSelect(color);
     }
   };
+
+  // Use prop selectedColor if provided, otherwise use local state
+  const effectiveSelectedColor = selectedColor || localSelectedColor;
 
   return (
     <div className="space-y-6">
@@ -105,7 +109,7 @@ const ResumeTemplates: React.FC<ResumeTemplatesProps> = ({ onSelect, selectedTem
           <Card 
             key={template.id}
             className={cn(
-              "relative overflow-hidden cursor-pointer transition-all duration-300",
+              "relative overflow-hidden cursor-pointer transition-all duration-200",
               template.id === selectedTemplateId 
                 ? "border-2 border-primary ring-2 ring-primary/20" 
                 : "border border-gray-200 hover:border-primary/50",
@@ -120,7 +124,7 @@ const ResumeTemplates: React.FC<ResumeTemplatesProps> = ({ onSelect, selectedTem
                 src={template.image} 
                 alt={template.name} 
                 className={cn(
-                  "w-full h-full object-cover transition-transform duration-500",
+                  "w-full h-full object-cover transition-transform duration-300",
                   hoveredTemplate === template.id ? "scale-105" : "scale-100"
                 )}
               />
@@ -128,7 +132,7 @@ const ResumeTemplates: React.FC<ResumeTemplatesProps> = ({ onSelect, selectedTem
               {/* Preview overlay for templates */}
               <div 
                 className={cn(
-                  "absolute inset-0 bg-black/60 backdrop-blur-sm flex flex-col items-center justify-center p-4 transition-all duration-300",
+                  "absolute inset-0 bg-black/60 backdrop-blur-sm flex flex-col items-center justify-center p-4 transition-all duration-200",
                   (hoveredTemplate === template.id || template.id === selectedTemplateId) 
                     ? "opacity-100" 
                     : "opacity-0 pointer-events-none"
@@ -140,7 +144,7 @@ const ResumeTemplates: React.FC<ResumeTemplatesProps> = ({ onSelect, selectedTem
                 <div className="flex gap-2 mb-4">
                   <Button 
                     size="sm" 
-                    className="bg-primary/90 hover:bg-primary transition-colors"
+                    className="bg-black hover:bg-black/80 transition-colors text-white"
                     onClick={() => onSelect(template)}
                   >
                     {template.id === selectedTemplateId ? (
@@ -170,7 +174,7 @@ const ResumeTemplates: React.FC<ResumeTemplatesProps> = ({ onSelect, selectedTem
                       key={index}
                       className={cn(
                         "w-6 h-6 rounded-full transition-all duration-200",
-                        selectedColor === color && template.id === selectedTemplateId
+                        effectiveSelectedColor === color && template.id === selectedTemplateId
                           ? "ring-2 ring-white scale-110"
                           : "hover:scale-110"
                       )}
@@ -215,7 +219,7 @@ const ResumeTemplates: React.FC<ResumeTemplatesProps> = ({ onSelect, selectedTem
                     key={index}
                     className={cn(
                       "w-4 h-4 rounded-full transition-all duration-200 hover:scale-110",
-                      selectedColor === color && template.id === selectedTemplateId && "ring-1 ring-gray-400"
+                      effectiveSelectedColor === color && template.id === selectedTemplateId && "ring-1 ring-gray-400"
                     )}
                     style={{ backgroundColor: color }}
                     onClick={(e) => handleColorSelect(e, color)}
@@ -272,7 +276,7 @@ const ResumeTemplates: React.FC<ResumeTemplatesProps> = ({ onSelect, selectedTem
                     key={index}
                     className={cn(
                       "w-8 h-8 rounded-full transition-all duration-200 hover:scale-110",
-                      selectedColor === color ? "ring-2 ring-gray-400 scale-110" : ""
+                      effectiveSelectedColor === color ? "ring-2 ring-gray-400 scale-110" : ""
                     )}
                     style={{ backgroundColor: color }}
                     onClick={(e) => handleColorSelect(e, color)}
@@ -281,7 +285,7 @@ const ResumeTemplates: React.FC<ResumeTemplatesProps> = ({ onSelect, selectedTem
                 ))}
               </div>
               <Button 
-                className="w-full"
+                className="w-full bg-black hover:bg-black/80 text-white"
                 onClick={() => {
                   const template = templates.find(t => t.id === previewTemplate);
                   if (template) {

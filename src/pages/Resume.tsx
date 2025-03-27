@@ -108,6 +108,11 @@ const Resume = () => {
         description: "Unable to generate resume. Please try again.",
         variant: "destructive",
       });
+    } else {
+      toast({
+        title: "Download Started",
+        description: "Your resume PDF is being prepared for download.",
+      });
     }
   };
 
@@ -214,6 +219,7 @@ const Resume = () => {
                 onSelect={handleTemplateSelect} 
                 selectedTemplateId={selectedTemplate?.id}
                 onColorSelect={handleColorSelect}
+                selectedColor={selectedColor}
               />
             </TabsContent>
             
@@ -247,7 +253,7 @@ const Resume = () => {
                       <div className="border rounded bg-white p-2 shadow-inner transition-all hover:shadow-md">
                         <ResumePreview 
                           resumeData={resumeData} 
-                          selectedTemplate={selectedTemplate?.id}
+                          selectedTemplate={selectedTemplate ? selectedTemplate.id : undefined}
                           selectedColor={selectedColor}
                         />
                       </div>
@@ -262,8 +268,9 @@ const Resume = () => {
                 <div className="bg-white rounded-lg shadow-lg border overflow-hidden transition-all duration-300 hover:shadow-xl">
                   <ResumePreview 
                     resumeData={resumeData} 
-                    selectedTemplate={selectedTemplate?.id}
+                    selectedTemplate={selectedTemplate ? selectedTemplate.id : undefined}
                     selectedColor={selectedColor}
+                    downloadable={true}
                   />
                 </div>
                 

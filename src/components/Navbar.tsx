@@ -38,7 +38,7 @@ const Navbar = () => {
     }
   }, []);
 
-  // Modified navLinks to remove Portfolio Setup when logged in
+  // Modified navLinks to always include Portfolio Setup
   const getNavLinks = () => {
     const baseLinks = [
       { name: 'Home', path: '/', hash: '' },
@@ -46,12 +46,8 @@ const Navbar = () => {
       { name: 'About', path: '/', hash: '#about' },
       { name: 'Contact', path: '/', hash: '#contact' },
       { name: 'Resume Builder', path: '/resume', hash: '' },
+      { name: 'Portfolio Setup', path: '/portfolio-setup', hash: '' },
     ];
-    
-    // Add Portfolio Setup only if not logged in
-    if (!isAuthenticated) {
-      baseLinks.push({ name: 'Portfolio Setup', path: '/portfolio-setup', hash: '' });
-    }
     
     return baseLinks;
   };
