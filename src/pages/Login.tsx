@@ -8,7 +8,6 @@ import { Alert, AlertDescription } from "@/components/ui/alert";
 import { useToast } from "@/hooks/use-toast";
 import Navbar from '@/components/Navbar';
 import Footer from '@/components/Footer';
-import { authService } from '../lib/api.mjs';
 import { AuthContext } from '@/App';
 import { toast } from 'sonner';
 
@@ -31,26 +30,45 @@ const Login = () => {
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-  
-    console.log("Submitting form with:", formData); // Debugging output
-  
+
+    setIsLoading(true);
+    setError("");
+
     try {
+      console.log("🔍 Sending Login Request:", formData);
+
       const response = await fetch("http://localhost:5000/api/auth/login", {
         method: "POST",
         headers: {
           "Content-Type": "application/json",
         },
-        body: JSON.stringify(formData),
+        body: JSON.stringify({
+          email: formData.email.trim().toLowerCase(), // ✅ Ensure lowercase email
+          password: formData.password.trim(),
+        }),
       });
-  
+
       const data = await response.json();
+      console.log("🔍 Server Response:", data);
+
       if (!response.ok) {
-        throw new Error(data.message || "Login failed");
+        throw new Error(data.message || "Invalid email or password");
       }
-  
-      console.log("Login successful:", data);
-    } catch (error) {
-      console.error("Login error:", error);
+
+      // ✅ Save user session
+      setIsAuthenticated(true);
+      setUser(data.user);
+      localStorage.setItem("token", data.token);
+
+      toast.success("🎉 Login successful!");
+      navigate("/dashboard");
+
+    } catch (error: any) {
+      console.error("❌ Login Error:", error.message);
+      setError(error.message);
+      toast.error(error.message);
+    } finally {
+      setIsLoading(false);
     }
   };
 

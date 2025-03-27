@@ -1,33 +1,27 @@
 import express from "express";
-import Portfolio from "../models/portfolio.mjs";
-import authMiddleware from "../middleware/authMiddleware.mjs";
+import Portfolio from "../models/Portfolio.mjs";
 
 const router = express.Router();
 
-// 🔹 Create Portfolio
-router.post("/", authMiddleware, async (req, res) => {
+// ✅ Get all portfolios
+router.get("/", async (req, res) => {
   try {
-    const { title, theme, description } = req.body;
-    const newPortfolio = await Portfolio.create({
-      userId: req.user.id,
-      title,
-      theme,
-      description,
-    });
-
-    res.status(201).json(newPortfolio);
-  } catch (error) {
-    res.status(500).json({ message: "Server Error", error });
+    const portfolios = await Portfolio.find();
+    res.json(portfolios);
+  } catch (err) {
+    res.status(500).json({ message: "Server error" });
   }
 });
 
-// 🔹 Get Portfolios of a User
-router.get("/", authMiddleware, async (req, res) => {
+// ✅ Create a portfolio
+router.post("/", async (req, res) => {
   try {
-    const portfolios = await Portfolio.find({ userId: req.user.id });
-    res.json(portfolios);
-  } catch (error) {
-    res.status(500).json({ message: "Server Error", error });
+    const { userId, title, description } = req.body;
+    const newPortfolio = new Portfolio({ userId, title, description });
+    await newPortfolio.save();
+    res.status(201).json(newPortfolio);
+  } catch (err) {
+    res.status(500).json({ message: "Server error" });
   }
 });
 

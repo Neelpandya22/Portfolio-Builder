@@ -2,7 +2,7 @@ import React, { useState, useEffect, useContext } from 'react';
 import { cn } from "@/lib/utils";
 import ProjectCard, { ProjectProps } from './ProjectCard';
 import { Button } from '@/components/ui/button';
-import { Plus, FolderPlus } from 'lucide-react';
+import { Plus, FolderPlus, Edit, Eye } from 'lucide-react';
 import { useNavigate } from 'react-router-dom';
 import { AuthContext } from "@/App";
 import { toast } from "@/components/ui/use-toast";
@@ -94,6 +94,14 @@ const ProjectGallery: React.FC = () => {
     navigate('/projects');
   };
 
+  const handleEditProject = (projectId: string) => {
+    navigate(`/projects?edit=${projectId}`);
+  };
+
+  const handleViewProject = (project: any) => {
+    window.open(project.url || '/', '_blank');
+  };
+
   const handleManagePortfolio = () => {
     navigate('/portfolio-setup');
   };
@@ -165,16 +173,35 @@ const ProjectGallery: React.FC = () => {
 
             <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
               {filteredProjects.map((project, index) => (
-                <ProjectCard
-                  key={project.id}
-                  id={project.id}
-                  title={project.title}
-                  description={project.description}
-                  image={project.image}
-                  category={project.category}
-                  url={project.url}
-                  index={index}
-                />
+                <div key={project.id} className="relative group">
+                  <ProjectCard
+                    id={project.id}
+                    title={project.title}
+                    description={project.description}
+                    image={project.image}
+                    category={project.category}
+                    url={project.url}
+                    index={index}
+                  />
+                  <div className="absolute top-3 right-3 flex gap-2 opacity-0 group-hover:opacity-100 transition-opacity">
+                    <Button 
+                      variant="secondary" 
+                      size="icon" 
+                      className="h-8 w-8 bg-white/80 hover:bg-white shadow-sm"
+                      onClick={() => handleEditProject(project.id)}
+                    >
+                      <Edit size={14} />
+                    </Button>
+                    <Button 
+                      variant="secondary" 
+                      size="icon" 
+                      className="h-8 w-8 bg-white/80 hover:bg-white shadow-sm"
+                      onClick={() => handleViewProject(project)}
+                    >
+                      <Eye size={14} />
+                    </Button>
+                  </div>
+                </div>
               ))}
             </div>
           </>

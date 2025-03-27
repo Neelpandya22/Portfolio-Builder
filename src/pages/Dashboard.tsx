@@ -7,14 +7,14 @@ import { Button } from "@/components/ui/button";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import Navbar from "@/components/Navbar";
 import Footer from "@/components/Footer";
-import { BarChart3, FilePen, ArrowUp, Settings, Folder, Users, MousePointerClick, Calendar, ArrowUpRight, BarChart, LineChart, Eye } from "lucide-react";
+import { BarChart3, FilePen, ArrowUp, Settings, Folder, Users, MousePointerClick, Calendar, ArrowUpRight, BarChart, LineChart, Eye, Edit, Plus, LogOut } from "lucide-react";
 import { Skeleton } from "@/components/ui/skeleton";
 import { toast } from "@/components/ui/use-toast";
 import AnalyticsCard from "@/components/AnalyticsCard";
 
 const Dashboard = () => {
   const navigate = useNavigate();
-  const { isAuthenticated, user } = useContext(AuthContext);
+  const { isAuthenticated, user, setIsAuthenticated, setUser } = useContext(AuthContext);
   const [loading, setLoading] = useState(true);
   const [projects, setProjects] = useState<any[]>([]);
   const [portfolioData, setPortfolioData] = useState<any>(null);
@@ -133,9 +133,16 @@ const Dashboard = () => {
     return name.split(' ').map(n => n[0]).join('').toUpperCase();
   };
 
+  const handleAddProject = () => {
+    navigate('/projects');
+  };
+
+  const handleEditProject = (projectId: string) => {
+    navigate(`/projects?edit=${projectId}`);
+  };
+
   const handlePreviewPortfolio = () => {
     // In a real app, this would navigate to the user's portfolio
-    // For now, we'll just show a toast
     toast({
       title: "Portfolio Preview",
       description: "Your portfolio preview is now available",
@@ -143,6 +150,24 @@ const Dashboard = () => {
     
     // Open a new tab with the index page as a demonstration
     window.open('/', '_blank');
+  };
+
+  const handleSignOut = () => {
+    // Clear auth data
+    localStorage.removeItem('token');
+    localStorage.removeItem('user');
+    
+    // Update auth context
+    setIsAuthenticated(false);
+    setUser(null);
+    
+    toast({
+      title: "Signed out",
+      description: "You have been signed out successfully.",
+    });
+    
+    // Redirect to home page
+    navigate('/');
   };
 
   if (loading) {
@@ -174,23 +199,35 @@ const Dashboard = () => {
       <div className="portfolio-container py-16">
         <div className="flex flex-col gap-8 max-w-5xl mx-auto">
           <header className="flex flex-col md:flex-row items-start md:items-center justify-between gap-4">
-            <div>
-              <h1 className="text-3xl font-bold flex items-center gap-2">
-                Welcome, {user?.name || 'User'}
-              </h1>
-              <p className="text-muted-foreground">
-                Manage your portfolio, projects, and analytics
-              </p>
+            <div className="flex items-center gap-3">
+              <Avatar className="h-10 w-10 border border-primary/10">
+                <AvatarImage src={localStorage.getItem('avatarUrl') || ''} />
+                <AvatarFallback className="bg-primary/10">
+                  {getInitials(user?.name || 'User')}
+                </AvatarFallback>
+              </Avatar>
+              <div>
+                <h1 className="text-3xl font-bold">
+                  Welcome, {user?.name || 'User'}
+                </h1>
+                <p className="text-muted-foreground">
+                  Manage your portfolio, projects, and analytics
+                </p>
+              </div>
             </div>
             
-            <div className="flex gap-3">
+            <div className="flex flex-wrap gap-3">
               <Button variant="outline" onClick={handlePreviewPortfolio} className="gap-2">
                 <Eye size={16} />
                 Preview Portfolio
               </Button>
-              <Button onClick={() => navigate('/portfolio-setup')} className="gap-2 bg-black hover:bg-black/90">
+              <Button onClick={() => navigate('/portfolio-setup')} className="gap-2">
                 <Settings size={16} />
                 Portfolio Settings
+              </Button>
+              <Button variant="destructive" onClick={handleSignOut} className="gap-2">
+                <LogOut size={16} />
+                Sign Out
               </Button>
             </div>
           </header>
@@ -274,13 +311,19 @@ const Dashboard = () => {
                           </span>
                         </div>
                         
-                        <div className="mt-4">
+                        <div className="mt-4 flex gap-3">
                           <Button 
                             onClick={() => navigate('/portfolio-setup')}
                             variant="outline" 
-                            className="w-full"
+                            className="flex-1"
                           >
-                            Continue Setup
+                            Edit Portfolio
+                          </Button>
+                          <Button 
+                            onClick={handlePreviewPortfolio}
+                            className="flex-1"
+                          >
+                            Preview Portfolio
                           </Button>
                         </div>
                       </div>
@@ -315,9 +358,10 @@ const Dashboard = () => {
                           Total projects in your portfolio
                         </p>
                         
-                        <div className="pt-4">
-                          <Button onClick={() => navigate('/projects')} variant="outline" className="w-full">
-                            Manage Projects
+                        <div className="pt-4 flex gap-3">
+                          <Button onClick={handleAddProject} variant="default" className="w-full flex items-center gap-2">
+                            <Plus size={16} />
+                            Add Project
                           </Button>
                         </div>
                       </div>
@@ -326,7 +370,8 @@ const Dashboard = () => {
                         <p className="text-muted-foreground mb-4">
                           You haven't added any projects yet
                         </p>
-                        <Button onClick={() => navigate('/projects')}>
+                        <Button onClick={handleAddProject} className="flex items-center gap-2">
+                          <Plus size={16} />
                           Add Projects
                         </Button>
                       </div>
@@ -360,13 +405,26 @@ const Dashboard = () => {
                                 <p className="text-xs text-muted-foreground">Project added</p>
                               </div>
                             </div>
-                            <Button
-                              variant="ghost"
-                              size="sm"
-                              onClick={() => navigate('/projects')}
-                            >
-                              View
-                            </Button>
+                            <div className="flex gap-2">
+                              <Button
+                                variant="ghost"
+                                size="sm"
+                                onClick={() => handleEditProject(project.id)}
+                                className="flex items-center gap-1"
+                              >
+                                <Edit size={14} />
+                                Edit
+                              </Button>
+                              <Button
+                                variant="ghost"
+                                size="sm"
+                                onClick={() => window.open(project.url || '/', '_blank')}
+                                className="flex items-center gap-1"
+                              >
+                                <Eye size={14} />
+                                View
+                              </Button>
+                            </div>
                           </div>
                         ))}
                       </div>
@@ -387,8 +445,9 @@ const Dashboard = () => {
                 <CardHeader>
                   <div className="flex justify-between items-center">
                     <CardTitle>Your Projects</CardTitle>
-                    <Button onClick={() => navigate('/projects')} size="sm">
-                      Manage Projects
+                    <Button onClick={handleAddProject} size="sm" className="flex items-center gap-2">
+                      <Plus size={16} />
+                      Add Project
                     </Button>
                   </div>
                   <CardDescription>
@@ -412,6 +471,24 @@ const Dashboard = () => {
                                 <Folder className="h-8 w-8 text-gray-300" />
                               </div>
                             )}
+                            <div className="absolute top-2 right-2 flex gap-1">
+                              <Button 
+                                variant="secondary" 
+                                size="icon" 
+                                className="h-8 w-8 bg-white/80 hover:bg-white"
+                                onClick={() => handleEditProject(project.id)}
+                              >
+                                <Edit size={14} />
+                              </Button>
+                              <Button 
+                                variant="secondary" 
+                                size="icon" 
+                                className="h-8 w-8 bg-white/80 hover:bg-white"
+                                onClick={() => window.open(project.url || '/', '_blank')}
+                              >
+                                <Eye size={14} />
+                              </Button>
+                            </div>
                           </div>
                           <div className="p-3">
                             <h3 className="font-medium truncate">{project.title}</h3>
@@ -427,7 +504,8 @@ const Dashboard = () => {
                       <p className="text-muted-foreground mb-6">
                         Add projects to showcase in your portfolio
                       </p>
-                      <Button onClick={() => navigate('/projects')}>
+                      <Button onClick={handleAddProject} className="flex items-center gap-2">
+                        <Plus size={16} />
                         Add Your First Project
                       </Button>
                     </div>

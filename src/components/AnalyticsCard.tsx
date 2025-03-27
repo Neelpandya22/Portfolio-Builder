@@ -1,4 +1,3 @@
-
 import React from 'react';
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { LineChart, Line, BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer } from 'recharts';
@@ -32,10 +31,10 @@ const AnalyticsCard: React.FC<AnalyticsCardProps> = ({
         {icon}
       </CardHeader>
       <CardContent>
-        <div className="text-2xl font-bold">{value}</div>
+        {value && <div className="text-2xl font-bold">{value}</div>}
         {description && <p className="text-xs text-muted-foreground">{description}</p>}
         
-        {type === 'line' && data && (
+        {type === 'line' && data && data.length > 0 && (
           <div className="h-[80px] mt-4">
             <ResponsiveContainer width="100%" height="100%">
               <LineChart data={data}>
@@ -59,7 +58,7 @@ const AnalyticsCard: React.FC<AnalyticsCardProps> = ({
           </div>
         )}
         
-        {type === 'bar' && data && (
+        {type === 'bar' && data && data.length > 0 && (
           <div className="h-[80px] mt-4">
             <ResponsiveContainer width="100%" height="100%">
               <BarChart data={data}>
