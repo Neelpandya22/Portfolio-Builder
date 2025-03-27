@@ -1,5 +1,5 @@
 import express from "express";
-import Portfolio from "../models/Portfolio.mjs";
+import Portfolio from "..Portfolio.mjs";
 
 const router = express.Router();
 
