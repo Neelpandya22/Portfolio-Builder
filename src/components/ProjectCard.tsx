@@ -3,21 +3,21 @@ import { cn } from "@/lib/utils";
 import { ExternalLink } from 'lucide-react';
 
 export interface ProjectProps {
-  id: number;
+  id: number | string;
   title: string;
   description: string;
-  image: string;
-  category: string;
-  url: string;
+  image?: string;
+  category?: string;
+  url?: string;
   index: number;
 }
 
 const ProjectCard: React.FC<ProjectProps> = ({
   title,
   description,
-  image,
-  category,
-  url,
+  image = "/placeholder.svg",
+  category = "Other",
+  url = "#",
   index
 }) => {
   const [isHovered, setIsHovered] = useState(false);
@@ -73,6 +73,11 @@ const ProjectCard: React.FC<ProjectProps> = ({
             "transition-transform"
           )}
           style={{ transitionTimingFunction: "cubic-bezier(0.16, 1, 0.3, 1)" }}
+          onError={(e) => {
+            // If image fails to load, replace with placeholder
+            const target = e.target as HTMLImageElement;
+            target.src = "/placeholder.svg";
+          }}
         />
       </div>
 

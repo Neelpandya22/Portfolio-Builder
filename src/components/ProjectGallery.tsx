@@ -1,32 +1,50 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useContext } from 'react';
 import { cn } from "@/lib/utils";
 import ProjectCard, { ProjectProps } from './ProjectCard';
 import { Button } from '@/components/ui/button';
 import { Plus, FolderPlus } from 'lucide-react';
 import { useNavigate } from 'react-router-dom';
-import { authService } from '../lib/api.mjs';
+import { AuthContext } from "@/App";
+import { toast } from "@/components/ui/use-toast";
 
 const ProjectGallery: React.FC = () => {
   const navigate = useNavigate();
+  const { isAuthenticated, user } = useContext(AuthContext);
   const [selectedCategory, setSelectedCategory] = useState('All');
   const [filteredProjects, setFilteredProjects] = useState<any[]>([]);
   const [titleVisible, setTitleVisible] = useState(false);
-  const [isLoggedIn, setIsLoggedIn] = useState(false);
   const [userProjects, setUserProjects] = useState<any[]>([]);
   const [allProjects, setAllProjects] = useState<any[]>([]);
 
-  // Check if user is logged in
+  // Load user projects
   useEffect(() => {
-    const isAuthenticated = authService.isAuthenticated();
-    setIsLoggedIn(isAuthenticated);
-
     // If logged in, try to get user projects from localStorage
     if (isAuthenticated) {
       const savedProjects = localStorage.getItem('userProjects');
+      const portfolioData = localStorage.getItem('portfolioData');
+      
+      if (portfolioData) {
+        try {
+          const parsedPortfolio = JSON.parse(portfolioData);
+          if (parsedPortfolio.projects && parsedPortfolio.projects.length > 0) {
+            setUserProjects(parsedPortfolio.projects);
+            setAllProjects(parsedPortfolio.projects);
+            return;
+          }
+        } catch (e) {
+          console.error('Error parsing portfolio data', e);
+        }
+      }
+      
       if (savedProjects) {
-        const parsedProjects = JSON.parse(savedProjects);
-        setUserProjects(parsedProjects);
-        setAllProjects(parsedProjects);
+        try {
+          const parsedProjects = JSON.parse(savedProjects);
+          setUserProjects(parsedProjects);
+          setAllProjects(parsedProjects);
+        } catch (e) {
+          console.error('Error parsing saved projects', e);
+          setAllProjects([]); // Empty for logged in users with no projects
+        }
       } else {
         setAllProjects([]); // Empty for logged in users with no projects
       }
@@ -34,7 +52,7 @@ const ProjectGallery: React.FC = () => {
       // Not logged in, use empty projects array to encourage signup
       setAllProjects([]);
     }
-  }, []);
+  }, [isAuthenticated]);
 
   // Get unique categories from projects
   const categories = ['All', ...Array.from(new Set(allProjects.map(project => 
@@ -76,6 +94,10 @@ const ProjectGallery: React.FC = () => {
     navigate('/projects');
   };
 
+  const handleManagePortfolio = () => {
+    navigate('/portfolio-setup');
+  };
+
   return (
     <section id="projects" className="py-20 bg-gradient-to-b from-white to-gray-50">
       <div className="portfolio-container">
@@ -87,26 +109,36 @@ const ProjectGallery: React.FC = () => {
           )}
         >
           <h2 className="section-title">
-            {isLoggedIn ? 'My Projects' : 'Showcase Your Work'}
+            {isAuthenticated ? 'My Projects' : 'Showcase Your Work'}
           </h2>
           <p className="section-subtitle mx-auto">
-            {isLoggedIn 
+            {isAuthenticated 
               ? 'Manage and showcase your professional portfolio projects'
               : 'Sign up to create your own professional portfolio and showcase your best work.'
             }
           </p>
           
-          <div className="mt-6">
+          <div className="mt-6 flex gap-3 justify-center">
             <Button 
-              onClick={isLoggedIn ? handleAddProject : () => navigate('/register')}
+              onClick={isAuthenticated ? handleAddProject : () => navigate('/register')}
               className="flex items-center gap-2 animate-pulse-slow bg-black hover:bg-black/90 text-white"
             >
               <Plus size={18} />
-              {isLoggedIn 
+              {isAuthenticated 
                 ? (userProjects.length === 0 ? 'Add Your First Project' : 'Manage Projects')
                 : 'Get Started Free'
               }
             </Button>
+            
+            {isAuthenticated && (
+              <Button 
+                onClick={handleManagePortfolio}
+                variant="outline"
+                className="flex items-center gap-2"
+              >
+                Manage Portfolio
+              </Button>
+            )}
           </div>
         </div>
 
@@ -135,7 +167,12 @@ const ProjectGallery: React.FC = () => {
               {filteredProjects.map((project, index) => (
                 <ProjectCard
                   key={project.id}
-                  {...project}
+                  id={project.id}
+                  title={project.title}
+                  description={project.description}
+                  image={project.image}
+                  category={project.category}
+                  url={project.url}
                   index={index}
                 />
               ))}
@@ -145,21 +182,21 @@ const ProjectGallery: React.FC = () => {
           <div className="bg-gray-50 border border-gray-100 rounded-lg p-10 text-center">
             <FolderPlus className="h-16 w-16 mx-auto text-gray-300 mb-4" />
             <h3 className="text-xl font-semibold mb-2">
-              {isLoggedIn ? 'No Projects Yet' : 'Create Your Portfolio'}
+              {isAuthenticated ? 'No Projects Yet' : 'Create Your Portfolio'}
             </h3>
             <p className="text-gray-500 mb-6 max-w-md mx-auto">
-              {isLoggedIn 
+              {isAuthenticated 
                 ? "You haven't added any projects to your portfolio. Add your first project to showcase your work."
                 : "Sign up to create and manage your professional portfolio. Showcase your work to potential clients and employers."
               }
             </p>
             <Button 
-              onClick={isLoggedIn ? handleAddProject : () => navigate('/register')}
+              onClick={isAuthenticated ? handleAddProject : () => navigate('/register')}
               size="lg"
               className="px-6 py-6 h-auto rounded-full bg-black hover:bg-black/90 text-white transition-colors"
             >
               <Plus className="h-5 w-5 mr-2" />
-              {isLoggedIn ? 'Create Your First Project' : 'Create Free Account'}
+              {isAuthenticated ? 'Create Your First Project' : 'Create Free Account'}
             </Button>
           </div>
         )}

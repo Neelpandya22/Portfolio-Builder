@@ -185,37 +185,20 @@ const PortfolioSetup: React.FC = () => {
       const [parent, child] = name.split('.');
       
       if (parent === 'socialLinks') {
-        setPortfolio({
-          ...portfolio,
+        setPortfolio(prevState => ({
+          ...prevState,
           socialLinks: {
-            ...portfolio.socialLinks,
+            ...prevState.socialLinks,
             [child]: value,
           },
-        });
-      } else {
-        // For other potential nested properties, handle them safely
-        const updatedPortfolio = { ...portfolio };
-        
-        // Type assertion to ensure we can safely access and modify the property
-        // This is safer than directly spreading an unknown property
-        if (parent in updatedPortfolio) {
-          const parentObj = updatedPortfolio[parent as keyof PortfolioState];
-          
-          // Only attempt to update if the parent is an object
-          if (parentObj && typeof parentObj === 'object' && !Array.isArray(parentObj)) {
-            // Update the nested property safely
-            // Casting to any is necessary to handle the dynamic property access
-            (updatedPortfolio[parent as keyof PortfolioState] as any)[child] = value;
-          }
-        }
-        
-        setPortfolio(updatedPortfolio);
+        }));
       }
     } else {
-      setPortfolio({
-        ...portfolio,
+      // Handle top-level properties
+      setPortfolio(prevState => ({
+        ...prevState,
         [name]: value,
-      });
+      }));
     }
   };
 
@@ -240,13 +223,10 @@ const PortfolioSetup: React.FC = () => {
       id: uuidv4(),
       title: "New Project",
       description: "Project description goes here",
-      images: [],
-      links: {
-        demo: "",
-        github: "",
-      },
-      tags: [],
+      image: "",
       category: "Other",
+      url: "",
+      createdAt: new Date().toISOString(),
     };
     
     const updatedProjects = [...portfolio.projects, newProject];
@@ -257,6 +237,10 @@ const PortfolioSetup: React.FC = () => {
     
     setPortfolio(updatedPortfolio);
     localStorage.setItem('portfolioData', JSON.stringify(updatedPortfolio));
+    
+    // Save to userProjects as well to make it appear in other components
+    localStorage.setItem('userProjects', JSON.stringify(updatedProjects));
+    
     calculateProgress(updatedPortfolio);
     
     toast({
@@ -274,6 +258,7 @@ const PortfolioSetup: React.FC = () => {
     
     setPortfolio(updatedPortfolio);
     localStorage.setItem('portfolioData', JSON.stringify(updatedPortfolio));
+    localStorage.setItem('userProjects', JSON.stringify(reorderedProjects));
     
     toast({
       title: "Projects Reordered",
@@ -303,6 +288,8 @@ const PortfolioSetup: React.FC = () => {
     
     setPortfolio(updatedPortfolio);
     localStorage.setItem('portfolioData', JSON.stringify(updatedPortfolio));
+    localStorage.setItem('userProjects', JSON.stringify(updatedProjects));
+    
     calculateProgress(updatedPortfolio);
     
     toast({
@@ -319,6 +306,18 @@ const PortfolioSetup: React.FC = () => {
     });
     
     // In a real app, you'd open a modal or navigate to a view page
+  };
+
+  // Preview portfolio
+  const previewPortfolio = () => {
+    // In a real application, this would open a preview of the actual portfolio
+    toast({
+      title: "Portfolio Preview",
+      description: "Opening portfolio preview...",
+    });
+    
+    // Open the index page in a new tab as a simple demonstration
+    window.open('/', '_blank');
   };
 
   // Publish portfolio
@@ -600,7 +599,7 @@ const PortfolioSetup: React.FC = () => {
                     <div className="h-full flex items-center justify-center">
                       <div className="text-center">
                         <p className="text-lg font-medium text-gray-500 mb-4">Portfolio Preview</p>
-                        <Button className="gap-2">
+                        <Button className="gap-2" onClick={previewPortfolio}>
                           <Eye className="h-4 w-4" />
                           View Full Preview
                         </Button>
@@ -651,6 +650,14 @@ const PortfolioSetup: React.FC = () => {
                         ? `View at ${portfolio.domain}` 
                         : 'View your portfolio on our platform'}
                     </p>
+                    <Button 
+                      variant="outline" 
+                      onClick={previewPortfolio} 
+                      className="mt-3 bg-white"
+                    >
+                      <Eye className="h-4 w-4 mr-2" />
+                      Preview Portfolio
+                    </Button>
                   </div>
                 )}
               </div>

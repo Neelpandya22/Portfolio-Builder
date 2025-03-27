@@ -1,461 +1,538 @@
-import React, { useContext, useState, useEffect } from 'react';
-import { Link, useNavigate } from 'react-router-dom';
+import React, { useState, useEffect, useContext } from 'react';
+import { AuthContext } from "@/App";
+import { Link, useNavigate } from "react-router-dom";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
-import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from "@/components/ui/card";
+import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
-import { Separator } from "@/components/ui/separator";
-import { Progress } from "@/components/ui/progress";
-import { useToast } from "@/components/ui/use-toast";
-import { 
-  Settings, 
-  Briefcase, 
-  FileText, 
-  ImageIcon, 
-  Layers, 
-  PenTool, 
-  PlusCircle, 
-  Calendar, 
-  ArrowRight,
-  Globe,
-  BarChart,
-  Link2,
-  Eye,
-  Share2,
-  User,
-  Camera,
-  Upload,
-  LogOut
-} from 'lucide-react';
-
-import Navbar from '@/components/Navbar';
-import Footer from '@/components/Footer';
-import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
-import { AuthContext } from '@/App';
-import ProfileSettings from '@/components/ProfileSettings';
+import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
+import Navbar from "@/components/Navbar";
+import Footer from "@/components/Footer";
+import { BarChart3, FilePen, ArrowUp, Settings, Folder, Users, MousePointerClick, Calendar, ArrowUpRight, BarChart, LineChart, Eye } from "lucide-react";
+import { Skeleton } from "@/components/ui/skeleton";
+import { toast } from "@/components/ui/use-toast";
+import AnalyticsCard from "@/components/AnalyticsCard";
 
 const Dashboard = () => {
-  const [progress, setProgress] = useState(65);
-  const [activeTab, setActiveTab] = useState('projects');
-  const { toast } = useToast();
   const navigate = useNavigate();
-  const { user, setIsAuthenticated, setUser } = useContext(AuthContext);
-  const userName = user?.name || 'User';
-  const userInitials = userName.split(' ').map(part => part[0]).join('').toUpperCase();
-  const [avatarUrl, setAvatarUrl] = useState("");
+  const { isAuthenticated, user } = useContext(AuthContext);
+  const [loading, setLoading] = useState(true);
+  const [projects, setProjects] = useState<any[]>([]);
+  const [portfolioData, setPortfolioData] = useState<any>(null);
 
-  // Load avatar and calculate progress on mount
-  useEffect(() => {
-    // Load avatar
-    const storedAvatarUrl = localStorage.getItem('avatarUrl');
-    if (storedAvatarUrl) {
-      setAvatarUrl(storedAvatarUrl);
+  // Analytics demo data
+  const [analyticsData, setAnalyticsData] = useState({
+    views: {
+      total: 0,
+      weeklyData: [] as any[],
+      change: '+0%'
+    },
+    clicks: {
+      total: 0,
+      weeklyData: [] as any[],
+      change: '+0%'
+    },
+    visitors: {
+      total: 0,
+      monthlyData: [] as any[],
+      change: '+0%'
+    },
+    conversions: {
+      total: 0,
+      weeklyData: [] as any[],
+      change: '+0%'
     }
+  });
+
+  useEffect(() => {
+    if (!isAuthenticated) {
+      navigate('/login');
+      return;
+    }
+
+    const loadDashboardData = async () => {
+      try {
+        // Load projects
+        const savedProjects = localStorage.getItem('userProjects');
+        if (savedProjects) {
+          setProjects(JSON.parse(savedProjects));
+        }
+
+        // Load portfolio data
+        const savedPortfolio = localStorage.getItem('portfolioData');
+        if (savedPortfolio) {
+          setPortfolioData(JSON.parse(savedPortfolio));
+        }
+
+        // Generate random analytics data for demo purposes
+        generateAnalyticsData();
+        
+        setLoading(false);
+      } catch (error) {
+        console.error('Error loading dashboard data:', error);
+        setLoading(false);
+      }
+    };
+
+    loadDashboardData();
+  }, [isAuthenticated, navigate]);
+
+  const generateAnalyticsData = () => {
+    // Generate random data for demonstration purposes
+    const viewsData = Array(7).fill(0).map((_, i) => ({
+      name: `Day ${i + 1}`,
+      value: Math.floor(Math.random() * 100) + 20
+    }));
     
-    // Calculate profile completion percentage
-    calculateProfileCompletion();
-  }, []);
-  
-  // Calculate profile completion percentage based on data in localStorage
-  const calculateProfileCompletion = () => {
-    const profileItems = [
-      localStorage.getItem('userName'),
-      localStorage.getItem('userEmail'),
-      localStorage.getItem('userBio'),
-      localStorage.getItem('userLocation'),
-      localStorage.getItem('userWebsite'),
-      localStorage.getItem('avatarUrl'),
-      localStorage.getItem('socialLinks'),
-      localStorage.getItem('resumeData'),
-    ];
+    const clicksData = Array(7).fill(0).map((_, i) => ({
+      name: `Day ${i + 1}`,
+      value: Math.floor(Math.random() * 50) + 10
+    }));
     
-    const completedItems = profileItems.filter(item => item).length;
-    const newProgress = Math.min(100, Math.round((completedItems / profileItems.length) * 100));
-    setProgress(newProgress);
-  };
-  
-  const handleSignOut = () => {
-    // Clear auth data
-    localStorage.removeItem('token');
-    localStorage.removeItem('user');
+    const visitorsData = Array(5).fill(0).map((_, i) => ({
+      name: `Month ${i + 1}`,
+      value: Math.floor(Math.random() * 200) + 50
+    }));
     
-    // Update auth context
-    setIsAuthenticated(false);
-    setUser(null);
-    
-    toast({
-      title: "Signed out",
-      description: "You have been signed out successfully.",
+    const conversionData = Array(7).fill(0).map((_, i) => ({
+      name: `Day ${i + 1}`,
+      value: Math.floor(Math.random() * 10) + 1
+    }));
+
+    // Calculate totals
+    const viewsTotal = viewsData.reduce((sum, item) => sum + item.value, 0);
+    const clicksTotal = clicksData.reduce((sum, item) => sum + item.value, 0);
+    const visitorsTotal = visitorsData.reduce((sum, item) => sum + item.value, 0);
+    const conversionsTotal = conversionData.reduce((sum, item) => sum + item.value, 0);
+
+    setAnalyticsData({
+      views: {
+        total: viewsTotal,
+        weeklyData: viewsData,
+        change: '+12%'
+      },
+      clicks: {
+        total: clicksTotal,
+        weeklyData: clicksData,
+        change: '+8%'
+      },
+      visitors: {
+        total: visitorsTotal,
+        monthlyData: visitorsData,
+        change: '+15%'
+      },
+      conversions: {
+        total: conversionsTotal,
+        weeklyData: conversionData,
+        change: '+5%'
+      }
     });
-    
-    // Redirect to home page
-    navigate('/');
   };
-  
+
+  const getInitials = (name: string) => {
+    if (!name) return 'U';
+    return name.split(' ').map(n => n[0]).join('').toUpperCase();
+  };
+
   const handlePreviewPortfolio = () => {
-    // In a real app, this would navigate to the public portfolio view
+    // In a real app, this would navigate to the user's portfolio
+    // For now, we'll just show a toast
     toast({
       title: "Portfolio Preview",
-      description: "This feature will be available soon.",
+      description: "Your portfolio preview is now available",
     });
+    
+    // Open a new tab with the index page as a demonstration
+    window.open('/', '_blank');
   };
-  
-  const handlePublishPortfolio = () => {
-    toast({
-      title: "Portfolio Published",
-      description: "Your portfolio is now live and accessible to the public.",
-    });
-  };
+
+  if (loading) {
+    return (
+      <div className="min-h-screen bg-background">
+        <Navbar />
+        <div className="portfolio-container py-16">
+          <div className="flex flex-col gap-4 max-w-5xl mx-auto">
+            <Skeleton className="h-12 w-64" />
+            <Skeleton className="h-8 w-48" />
+            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4 mt-6">
+              <Skeleton className="h-32 rounded-lg" />
+              <Skeleton className="h-32 rounded-lg" />
+              <Skeleton className="h-32 rounded-lg" />
+              <Skeleton className="h-32 rounded-lg" />
+            </div>
+            <Skeleton className="h-64 rounded-lg mt-6" />
+          </div>
+        </div>
+        <Footer />
+      </div>
+    );
+  }
 
   return (
     <div className="min-h-screen bg-background">
       <Navbar />
       
-      <div className="portfolio-container py-24">
-        <div className="flex flex-col space-y-8">
-          {/* Dashboard Header */}
-          <div className="flex flex-col md:flex-row md:items-center justify-between gap-6">
-            <div className="flex items-center space-x-4">
-              <Avatar className="h-16 w-16 border-2 border-primary/10">
-                <AvatarImage src={avatarUrl} />
-                <AvatarFallback className="bg-primary/10 text-primary font-semibold text-xl">
-                  {userInitials}
-                </AvatarFallback>
-              </Avatar>
-              <div>
-                <h1 className="text-3xl font-bold tracking-tight">Welcome, {userName}</h1>
-                <p className="text-muted-foreground">Manage your portfolio and track your progress</p>
-              </div>
+      <div className="portfolio-container py-16">
+        <div className="flex flex-col gap-8 max-w-5xl mx-auto">
+          <header className="flex flex-col md:flex-row items-start md:items-center justify-between gap-4">
+            <div>
+              <h1 className="text-3xl font-bold flex items-center gap-2">
+                Welcome, {user?.name || 'User'}
+              </h1>
+              <p className="text-muted-foreground">
+                Manage your portfolio, projects, and analytics
+              </p>
             </div>
-            <div className="flex items-center space-x-3">
-              <Button variant="outline" size="sm" onClick={handleSignOut} className="flex items-center gap-1">
-                <LogOut className="h-4 w-4" />
-                Sign Out
-              </Button>
-              <Button size="sm" onClick={handlePreviewPortfolio} className="flex items-center gap-1">
-                <Eye className="h-4 w-4" />
+            
+            <div className="flex gap-3">
+              <Button variant="outline" onClick={handlePreviewPortfolio} className="gap-2">
+                <Eye size={16} />
                 Preview Portfolio
               </Button>
-            </div>
-          </div>
-          
-          {/* Portfolio Completion */}
-          <Card>
-            <CardHeader className="pb-3">
-              <CardTitle>Portfolio Completion</CardTitle>
-              <CardDescription>Complete these steps to finish your portfolio</CardDescription>
-            </CardHeader>
-            <CardContent>
-              <div className="space-y-4">
-                <div className="space-y-2">
-                  <div className="flex items-center justify-between text-sm">
-                    <span>Progress</span>
-                    <span className="font-medium">{progress}%</span>
-                  </div>
-                  <Progress value={progress} className="h-2" />
-                </div>
-                
-                <div className="grid gap-3 md:grid-cols-3">
-                  <div 
-                    className="flex items-start space-x-4 rounded-lg border p-4 cursor-pointer hover:bg-muted/50 transition-colors"
-                    onClick={() => navigate('/projects')}
-                  >
-                    <Briefcase className="mt-1 h-5 w-5 text-primary" />
-                    <div>
-                      <p className="text-sm font-medium">Add Projects</p>
-                      <p className="text-sm text-muted-foreground">Showcase your best work</p>
-                    </div>
-                  </div>
-                  
-                  <div 
-                    className="flex items-start space-x-4 rounded-lg border p-4 bg-primary/5 cursor-pointer hover:bg-primary/10 transition-colors"
-                    onClick={() => navigate('/resume')}
-                  >
-                    <FileText className="mt-1 h-5 w-5 text-primary" />
-                    <div>
-                      <p className="text-sm font-medium">Update Resume</p>
-                      <p className="text-sm text-muted-foreground">Add your experience & skills</p>
-                    </div>
-                  </div>
-                  
-                  <div 
-                    className="flex items-start space-x-4 rounded-lg border p-4 cursor-pointer hover:bg-muted/50 transition-colors"
-                    onClick={() => setActiveTab('settings')}
-                  >
-                    <ImageIcon className="mt-1 h-5 w-5 text-primary" />
-                    <div>
-                      <p className="text-sm font-medium">Upload Photos</p>
-                      <p className="text-sm text-muted-foreground">Add profile & project images</p>
-                    </div>
-                  </div>
-                </div>
-              </div>
-            </CardContent>
-            <CardFooter>
-              <Button 
-                variant="outline" 
-                size="sm" 
-                className="ml-auto"
-                onClick={handlePublishPortfolio}
-              >
-                Publish Portfolio
-                <ArrowRight className="ml-2 h-4 w-4" />
+              <Button onClick={() => navigate('/portfolio-setup')} className="gap-2 bg-black hover:bg-black/90">
+                <Settings size={16} />
+                Portfolio Settings
               </Button>
-            </CardFooter>
-          </Card>
+            </div>
+          </header>
           
-          {/* Dashboard Tabs */}
-          <Tabs defaultValue={activeTab} value={activeTab} onValueChange={setActiveTab} className="mt-6">
-            <TabsList className="grid w-full grid-cols-4 mb-6">
+          <section className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
+            <AnalyticsCard
+              title="Total Views"
+              value={analyticsData.views.total}
+              description={`${analyticsData.views.change} from last week`}
+              type="line"
+              data={analyticsData.views.weeklyData}
+              icon={<Eye className="h-4 w-4 text-muted-foreground" />}
+            />
+            
+            <AnalyticsCard
+              title="Click-throughs"
+              value={analyticsData.clicks.total}
+              description={`${analyticsData.clicks.change} from last week`}
+              type="bar"
+              data={analyticsData.clicks.weeklyData}
+              icon={<MousePointerClick className="h-4 w-4 text-muted-foreground" />}
+            />
+            
+            <AnalyticsCard
+              title="Unique Visitors"
+              value={analyticsData.visitors.total}
+              description={`${analyticsData.visitors.change} from last month`}
+              type="bar"
+              data={analyticsData.visitors.monthlyData}
+              icon={<Users className="h-4 w-4 text-muted-foreground" />}
+            />
+            
+            <AnalyticsCard
+              title="Conversions"
+              value={analyticsData.conversions.total}
+              description={`${analyticsData.conversions.change} from last week`}
+              type="line"
+              data={analyticsData.conversions.weeklyData}
+              icon={<ArrowUpRight className="h-4 w-4 text-muted-foreground" />}
+            />
+          </section>
+          
+          <Tabs defaultValue="overview" className="w-full">
+            <TabsList className="mb-6">
+              <TabsTrigger value="overview">Overview</TabsTrigger>
               <TabsTrigger value="projects">Projects</TabsTrigger>
-              <TabsTrigger value="resume">Resume</TabsTrigger>
               <TabsTrigger value="analytics">Analytics</TabsTrigger>
-              <TabsTrigger value="settings">Settings</TabsTrigger>
             </TabsList>
             
-            <TabsContent value="projects" className="space-y-6">
-              <div className="flex items-center justify-between">
-                <h2 className="text-xl font-semibold tracking-tight">Your Projects</h2>
-                <Link to="/projects">
-                  <Button size="sm">
-                    <PlusCircle className="mr-2 h-4 w-4" />
-                    Add Project
-                  </Button>
-                </Link>
-              </div>
-              
-              <div className="grid gap-6 md:grid-cols-2 lg:grid-cols-3">
-                <Card className="overflow-hidden">
-                  <div className="h-40 bg-muted/30 animate-pulse"></div>
+            <TabsContent value="overview" className="space-y-6">
+              <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
+                <Card className="col-span-2">
                   <CardHeader>
-                    <CardTitle>Add Your First Project</CardTitle>
-                    <CardDescription>Showcase your work with detailed project information</CardDescription>
+                    <CardTitle className="flex items-center gap-2">
+                      <BarChart3 className="h-5 w-5" />
+                      Portfolio Status
+                    </CardTitle>
+                    <CardDescription>
+                      Your portfolio setup progress and statistics
+                    </CardDescription>
                   </CardHeader>
-                  <CardFooter>
-                    <Link to="/projects">
-                      <Button variant="outline">Get Started</Button>
-                    </Link>
-                  </CardFooter>
+                  <CardContent className="space-y-6">
+                    {portfolioData ? (
+                      <div className="space-y-4">
+                        <div className="flex justify-between items-center text-sm">
+                          <span>Completion Status</span>
+                          <span className="font-medium">
+                            {portfolioData.isPublished ? 'Published' : 'In Progress'}
+                          </span>
+                        </div>
+                        
+                        <div className="flex justify-between items-center text-sm">
+                          <span>Projects Added</span>
+                          <span className="font-medium">{projects.length}</span>
+                        </div>
+                        
+                        <div className="flex justify-between items-center text-sm">
+                          <span>Template Selected</span>
+                          <span className="font-medium capitalize">
+                            {portfolioData.template || 'None'}
+                          </span>
+                        </div>
+                        
+                        <div className="mt-4">
+                          <Button 
+                            onClick={() => navigate('/portfolio-setup')}
+                            variant="outline" 
+                            className="w-full"
+                          >
+                            Continue Setup
+                          </Button>
+                        </div>
+                      </div>
+                    ) : (
+                      <div className="text-center py-4">
+                        <p className="text-muted-foreground mb-4">
+                          You haven't started setting up your portfolio yet
+                        </p>
+                        <Button onClick={() => navigate('/portfolio-setup')}>
+                          Create Portfolio
+                        </Button>
+                      </div>
+                    )}
+                  </CardContent>
                 </Card>
                 
-                <Card className="border-dashed border-2 flex flex-col items-center justify-center py-8 px-6">
-                  <div className="h-12 w-12 rounded-full bg-primary/10 flex items-center justify-center mb-4">
-                    <PlusCircle className="h-6 w-6 text-primary" />
-                  </div>
-                  <h3 className="text-lg font-medium mb-2">Add New Project</h3>
-                  <p className="text-sm text-center text-muted-foreground mb-4">
-                    Create a new project to showcase your skills
-                  </p>
-                  <Link to="/projects">
-                    <Button variant="outline" size="sm">Add Project</Button>
-                  </Link>
+                <Card>
+                  <CardHeader>
+                    <CardTitle className="flex items-center gap-2">
+                      <Folder className="h-5 w-5" />
+                      Project Summary
+                    </CardTitle>
+                    <CardDescription>
+                      Your projects at a glance
+                    </CardDescription>
+                  </CardHeader>
+                  <CardContent>
+                    {projects.length > 0 ? (
+                      <div className="space-y-4">
+                        <div className="text-2xl font-bold">{projects.length}</div>
+                        <p className="text-sm text-muted-foreground">
+                          Total projects in your portfolio
+                        </p>
+                        
+                        <div className="pt-4">
+                          <Button onClick={() => navigate('/projects')} variant="outline" className="w-full">
+                            Manage Projects
+                          </Button>
+                        </div>
+                      </div>
+                    ) : (
+                      <div className="text-center py-2">
+                        <p className="text-muted-foreground mb-4">
+                          You haven't added any projects yet
+                        </p>
+                        <Button onClick={() => navigate('/projects')}>
+                          Add Projects
+                        </Button>
+                      </div>
+                    )}
+                  </CardContent>
                 </Card>
-              </div>
-            </TabsContent>
-            
-            <TabsContent value="resume" className="space-y-6">
-              <div className="flex items-center justify-between">
-                <h2 className="text-xl font-semibold tracking-tight">Your Resume</h2>
-                <Link to="/resume">
-                  <Button size="sm">
-                    <PenTool className="mr-2 h-4 w-4" />
-                    Edit Resume
-                  </Button>
-                </Link>
               </div>
               
               <Card>
                 <CardHeader>
-                  <CardTitle>Resume Builder</CardTitle>
-                  <CardDescription>Create and update your professional resume</CardDescription>
+                  <CardTitle className="flex items-center gap-2">
+                    <Calendar className="h-5 w-5" />
+                    Recent Activity
+                  </CardTitle>
+                  <CardDescription>
+                    Your recent portfolio activity
+                  </CardDescription>
                 </CardHeader>
                 <CardContent>
                   <div className="space-y-4">
-                    <div className="flex items-center space-x-4">
-                      <div className="h-10 w-10 rounded-full bg-primary/10 flex items-center justify-center">
-                        <Briefcase className="h-5 w-5 text-primary" />
+                    {projects.length > 0 ? (
+                      <div className="space-y-4">
+                        {projects.slice(0, 3).map((project, index) => (
+                          <div key={index} className="flex items-center justify-between">
+                            <div className="flex items-center gap-3">
+                              <div className="w-10 h-10 rounded bg-gray-100 flex items-center justify-center">
+                                <FilePen className="h-5 w-5 text-gray-500" />
+                              </div>
+                              <div>
+                                <p className="font-medium">{project.title}</p>
+                                <p className="text-xs text-muted-foreground">Project added</p>
+                              </div>
+                            </div>
+                            <Button
+                              variant="ghost"
+                              size="sm"
+                              onClick={() => navigate('/projects')}
+                            >
+                              View
+                            </Button>
+                          </div>
+                        ))}
                       </div>
-                      <div>
-                        <h3 className="text-sm font-medium">Work Experience</h3>
-                        <p className="text-sm text-muted-foreground">Add your work history</p>
+                    ) : (
+                      <div className="text-center py-6">
+                        <p className="text-muted-foreground">
+                          No recent activity to display
+                        </p>
                       </div>
-                      <Link to="/resume?tab=editor" className="ml-auto">
-                        <Button variant="ghost" size="sm">Add</Button>
-                      </Link>
-                    </div>
-                    
-                    <Separator />
-                    
-                    <div className="flex items-center space-x-4">
-                      <div className="h-10 w-10 rounded-full bg-primary/10 flex items-center justify-center">
-                        <Layers className="h-5 w-5 text-primary" />
-                      </div>
-                      <div>
-                        <h3 className="text-sm font-medium">Skills</h3>
-                        <p className="text-sm text-muted-foreground">Highlight your key skills</p>
-                      </div>
-                      <Link to="/resume?tab=editor" className="ml-auto">
-                        <Button variant="ghost" size="sm">Add</Button>
-                      </Link>
-                    </div>
-                    
-                    <Separator />
-                    
-                    <div className="flex items-center space-x-4">
-                      <div className="h-10 w-10 rounded-full bg-primary/10 flex items-center justify-center">
-                        <Calendar className="h-5 w-5 text-primary" />
-                      </div>
-                      <div>
-                        <h3 className="text-sm font-medium">Education</h3>
-                        <p className="text-sm text-muted-foreground">Add your educational background</p>
-                      </div>
-                      <Link to="/resume?tab=editor" className="ml-auto">
-                        <Button variant="ghost" size="sm">Add</Button>
-                      </Link>
-                    </div>
+                    )}
                   </div>
                 </CardContent>
-                <CardFooter>
-                  <Link to="/resume" className="ml-auto">
-                    <Button>
-                      Continue
-                      <ArrowRight className="ml-2 h-4 w-4" />
+              </Card>
+            </TabsContent>
+            
+            <TabsContent value="projects">
+              <Card>
+                <CardHeader>
+                  <div className="flex justify-between items-center">
+                    <CardTitle>Your Projects</CardTitle>
+                    <Button onClick={() => navigate('/projects')} size="sm">
+                      Manage Projects
                     </Button>
-                  </Link>
-                </CardFooter>
-              </Card>
-            </TabsContent>
-            
-            <TabsContent value="analytics" className="space-y-6">
-              <div className="flex items-center justify-between">
-                <h2 className="text-xl font-semibold tracking-tight">Portfolio Analytics</h2>
-                <Button variant="outline" size="sm" onClick={handlePublishPortfolio} className="flex items-center gap-1">
-                  <Share2 className="h-4 w-4" />
-                  Share Portfolio
-                </Button>
-              </div>
-              
-              <div className="grid gap-6 md:grid-cols-3">
-                <Card>
-                  <CardHeader className="pb-2">
-                    <CardTitle className="text-sm font-medium">Total Views</CardTitle>
-                  </CardHeader>
-                  <CardContent>
-                    <div className="text-2xl font-bold">0</div>
-                    <p className="text-xs text-muted-foreground">+0% from last month</p>
-                  </CardContent>
-                </Card>
-                
-                <Card>
-                  <CardHeader className="pb-2">
-                    <CardTitle className="text-sm font-medium">Unique Visitors</CardTitle>
-                  </CardHeader>
-                  <CardContent>
-                    <div className="text-2xl font-bold">0</div>
-                    <p className="text-xs text-muted-foreground">+0% from last month</p>
-                  </CardContent>
-                </Card>
-                
-                <Card>
-                  <CardHeader className="pb-2">
-                    <CardTitle className="text-sm font-medium">Avg. Time on Page</CardTitle>
-                  </CardHeader>
-                  <CardContent>
-                    <div className="text-2xl font-bold">0m 0s</div>
-                    <p className="text-xs text-muted-foreground">+0% from last month</p>
-                  </CardContent>
-                </Card>
-              </div>
-              
-              <Card>
-                <CardHeader>
-                  <CardTitle>Traffic Overview</CardTitle>
-                  <CardDescription>View your portfolio's performance over time</CardDescription>
-                </CardHeader>
-                <CardContent className="h-[300px] flex items-center justify-center">
-                  <div className="text-center">
-                    <BarChart className="h-12 w-12 mx-auto mb-4 text-muted-foreground" />
-                    <h3 className="text-lg font-medium mb-2">No Analytics Data Yet</h3>
-                    <p className="text-sm text-muted-foreground max-w-md mx-auto">
-                      Analytics will appear here once your portfolio is published and begins receiving visitors.
-                    </p>
                   </div>
+                  <CardDescription>
+                    View and manage all your portfolio projects
+                  </CardDescription>
+                </CardHeader>
+                <CardContent>
+                  {projects.length > 0 ? (
+                    <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                      {projects.map((project, index) => (
+                        <Card key={index} className="overflow-hidden">
+                          <div className="aspect-video bg-gray-100 relative">
+                            {project.image ? (
+                              <img 
+                                src={project.image} 
+                                alt={project.title} 
+                                className="w-full h-full object-cover"
+                              />
+                            ) : (
+                              <div className="w-full h-full flex items-center justify-center">
+                                <Folder className="h-8 w-8 text-gray-300" />
+                              </div>
+                            )}
+                          </div>
+                          <div className="p-3">
+                            <h3 className="font-medium truncate">{project.title}</h3>
+                            <p className="text-xs text-muted-foreground line-clamp-2">{project.description}</p>
+                          </div>
+                        </Card>
+                      ))}
+                    </div>
+                  ) : (
+                    <div className="text-center py-10">
+                      <Folder className="h-16 w-16 mx-auto text-gray-200 mb-4" />
+                      <h3 className="text-lg font-medium mb-2">No projects yet</h3>
+                      <p className="text-muted-foreground mb-6">
+                        Add projects to showcase in your portfolio
+                      </p>
+                      <Button onClick={() => navigate('/projects')}>
+                        Add Your First Project
+                      </Button>
+                    </div>
+                  )}
                 </CardContent>
               </Card>
             </TabsContent>
             
-            <TabsContent value="settings" className="space-y-6">
-              <div className="flex items-center justify-between">
-                <h2 className="text-xl font-semibold tracking-tight">Portfolio Settings</h2>
-              </div>
-              
-              <ProfileSettings userName={userName} userInitials={userInitials} avatarUrl={avatarUrl} setAvatarUrl={setAvatarUrl} />
-              
-              <Card>
+            <TabsContent value="analytics">
+              <Card className="space-y-4">
                 <CardHeader>
-                  <CardTitle>General Settings</CardTitle>
-                  <CardDescription>Manage your portfolio settings and preferences</CardDescription>
+                  <CardTitle>Portfolio Analytics</CardTitle>
+                  <CardDescription>
+                    View detailed statistics about your portfolio performance
+                  </CardDescription>
                 </CardHeader>
                 <CardContent>
-                  <div className="space-y-4">
-                    <div className="flex items-center space-x-4">
-                      <div className="h-10 w-10 rounded-full bg-primary/10 flex items-center justify-center">
-                        <Globe className="h-5 w-5 text-primary" />
-                      </div>
+                  <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                    <div className="space-y-6">
                       <div>
-                        <h3 className="text-sm font-medium">Custom Domain</h3>
-                        <p className="text-sm text-muted-foreground">Connect a custom domain to your portfolio</p>
+                        <h3 className="text-lg font-medium mb-2 flex items-center gap-2">
+                          <LineChart className="h-5 w-5" />
+                          Views Over Time
+                        </h3>
+                        <div className="h-64 bg-gray-50 rounded-md border flex items-center justify-center p-4">
+                          {analyticsData.views.weeklyData.length > 0 ? (
+                            <AnalyticsCard
+                              title=""
+                              value=""
+                              type="line"
+                              data={analyticsData.views.weeklyData}
+                              className="w-full h-full border-none shadow-none"
+                            />
+                          ) : (
+                            <p className="text-muted-foreground">No data available</p>
+                          )}
+                        </div>
                       </div>
-                      <Button 
-                        variant="outline" 
-                        size="sm" 
-                        className="ml-auto"
-                        onClick={() => toast({
-                          title: "Domain Settings",
-                          description: "Custom domain feature will be available soon."
-                        })}
-                      >
-                        Connect
-                      </Button>
+                      
+                      <div>
+                        <h3 className="text-lg font-medium mb-2 flex items-center gap-2">
+                          <Users className="h-5 w-5" />
+                          Visitor Demographics
+                        </h3>
+                        <div className="h-64 bg-gray-50 rounded-md border flex items-center justify-center">
+                          {analyticsData.visitors.monthlyData.length > 0 ? (
+                            <AnalyticsCard
+                              title=""
+                              value=""
+                              type="bar"
+                              data={analyticsData.visitors.monthlyData}
+                              className="w-full h-full border-none shadow-none"
+                            />
+                          ) : (
+                            <p className="text-muted-foreground">No data available</p>
+                          )}
+                        </div>
+                      </div>
                     </div>
                     
-                    <Separator />
-                    
-                    <div className="flex items-center space-x-4">
-                      <div className="h-10 w-10 rounded-full bg-primary/10 flex items-center justify-center">
-                        <Link2 className="h-5 w-5 text-primary" />
-                      </div>
+                    <div className="space-y-6">
                       <div>
-                        <h3 className="text-sm font-medium">Social Links</h3>
-                        <p className="text-sm text-muted-foreground">Add links to your social profiles</p>
+                        <h3 className="text-lg font-medium mb-2 flex items-center gap-2">
+                          <BarChart className="h-5 w-5" />
+                          Engagement by Project
+                        </h3>
+                        <div className="h-64 bg-gray-50 rounded-md border flex items-center justify-center">
+                          {projects.length > 0 ? (
+                            <div className="w-full h-full p-4">
+                              <AnalyticsCard
+                                title=""
+                                value=""
+                                type="bar"
+                                data={projects.map(p => ({
+                                  name: p.title,
+                                  value: Math.floor(Math.random() * 100) + 10
+                                }))}
+                                className="w-full h-full border-none shadow-none"
+                              />
+                            </div>
+                          ) : (
+                            <p className="text-muted-foreground">No projects to analyze</p>
+                          )}
+                        </div>
                       </div>
-                      <Button 
-                        variant="outline" 
-                        size="sm" 
-                        className="ml-auto" 
-                        onClick={() => setActiveTab('settings')}
-                      >
-                        Manage
-                      </Button>
-                    </div>
-                    
-                    <Separator />
-                    
-                    <div className="flex items-center space-x-4">
-                      <div className="h-10 w-10 rounded-full bg-primary/10 flex items-center justify-center">
-                        <Settings className="h-5 w-5 text-primary" />
-                      </div>
+                      
                       <div>
-                        <h3 className="text-sm font-medium">Account Settings</h3>
-                        <p className="text-sm text-muted-foreground">Update your account information</p>
+                        <h3 className="text-lg font-medium mb-2 flex items-center gap-2">
+                          <ArrowUp className="h-5 w-5" />
+                          Conversion Rate
+                        </h3>
+                        <div className="h-64 bg-gray-50 rounded-md border flex items-center justify-center">
+                          {analyticsData.conversions.weeklyData.length > 0 ? (
+                            <AnalyticsCard
+                              title=""
+                              value=""
+                              type="line"
+                              data={analyticsData.conversions.weeklyData}
+                              className="w-full h-full border-none shadow-none"
+                            />
+                          ) : (
+                            <p className="text-muted-foreground">No data available</p>
+                          )}
+                        </div>
                       </div>
-                      <Button 
-                        variant="outline" 
-                        size="sm" 
-                        className="ml-auto"
-                        onClick={() => setActiveTab('settings')}
-                      >
-                        Edit
-                      </Button>
                     </div>
                   </div>
                 </CardContent>
